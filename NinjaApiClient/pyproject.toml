@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "ninja-api-client"
+version = "1.0.0"
+description = "test Ninja API Client"
+authors = ["Sunny Lin <slin@whtrading.com>"]
+readme = "README.md"
+packages = [{include = "ninja_api_client"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+protobuf = "^3.15.8"
+black = "^24.8.0"
+pydantic-settings = "^2.6.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

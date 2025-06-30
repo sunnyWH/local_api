@@ -1,0 +1,120 @@
+syntax = "proto3";
+package NinjaApiMessages;
+
+message Header {
+  enum MsgType {
+    ERROR = 0;
+    HEARTBEAT = 1;
+    LOGIN_REQUEST = 2;
+    LOGIN_RESPONSE = 3;
+    NINJA_REQUEST = 4;
+    NINJA_RESPONSE = 5;
+    ACCOUNTS_REQUEST = 6;
+    ACCOUNTS_RESPONSE = 7;
+    SHEETS_REQUEST = 8;
+    SHEETS_RESPONSE = 9;
+    SHEET_RISK_REQUEST = 10;
+    SHEET_RISK_RESPONSE = 11;
+    SHEET_STATE_REQUEST = 12;
+    SHEET_STATE_RESPONSE = 13;
+    CONTRACTS_REQUEST = 14;
+    CONTRACTS_RESPONSE = 15;
+    CONTRACT_INFO_REQUEST = 16;
+    CONTRACT_INFO_RESPONSE = 17;
+    SETTLEMENTS_REQUEST = 18;
+    SETTLEMENTS_RESPONSE = 19;
+    PRICE_FEED_STATUS_REQUEST = 20;
+    PRICE_FEED_STATUS_RESPONSE = 21;
+    SECURITY_STATUSES_REQUEST = 22;
+    SECURITY_STATUSES_RESPONSE = 23;
+    START_MARKET_DATA_REQUEST = 24;
+    MARKET_UPDATES = 25;
+    STOP_MARKET_DATA_REQUEST = 26;
+    WORKING_RULES_REQUEST = 27;
+    WORKING_RULES_RESPONSE = 28;
+    POSITIONS_REQUEST = 29;
+    POSITIONS_RESPONSE = 30;
+    ORDER_ADD_REQUEST = 31;
+    ORDER_ADD_RESPONSE = 32;
+    ORDER_ADD_EVENT = 33;
+    ORDER_CHANGE_REQUEST = 34;
+    ORDER_CHANGE_RESPONSE = 35;
+    ORDER_CHANGE_EVENT = 36;
+    ORDER_CANCEL_REQUEST = 37;
+    ORDER_CANCEL_RESPONSE = 38;
+    ORDER_CANCEL_EVENT = 39;
+    CANCEL_ALL_ORDERS_REQUEST = 40;
+    CANCEL_ALL_ORDERS_RESPONSE = 41;
+    FILL_NOTICE = 42;
+    ACTIVE_ORDERS_REQUEST = 43;
+    ACTIVE_ORDERS_RESPONSE = 44;
+  }
+
+  MsgType msgType = 1;
+  string version = 2;
+}
+
+message MsgContainer {
+  Header header = 1;
+  bytes payload = 2;
+}
+
+message Error {
+  enum Type {
+    UNSPECIFIED = 0;
+    AUTHENTICATION = 1;
+    AUTHORIZATION = 2;
+    NOT_LOGGED_IN = 3;
+    RECEIVE_ERROR = 4;
+    UNSUPPORTED_MESSAGE = 5;
+    INVALID_MESSAGE = 6;
+    INVALID_VERSION = 7;
+    CONNECTION_INACTIVE = 8;
+    LOGIN_REQUEST_MALFORMED = 9;
+    NINJA_REQUEST_MALFORMED = 10;
+    SHEETS_REQUEST_MALFORMED = 11;
+    SHEET_RISK_REQUEST_MALFORMED = 12;
+    SHEET_STATE_REQUEST_MALFORMED = 13;
+    CONTRACTS_REQUEST_MALFORMED = 14;
+    CONTRACT_INFO_REQUEST_MALFORMED = 15;
+    SETTLEMENTS_REQUEST_MALFORMED = 16;
+    SECURITY_STATUSES_REQUEST_MALFORMED = 17;
+    START_MARKET_DATA_REQUEST_MALFORMED = 18;
+    STOP_MARKET_DATA_REQUEST_MALFORMED = 19;
+    WORKING_RULES_REQUEST_MALFORMED = 20;
+    POSITION_REQUEST_MALFORMED = 21;
+    RATE_LIMIT_EXCEEDED = 22;
+  }
+
+  Type type = 1;
+  string msg = 2;
+}
+  
+enum ConnectionType {
+  TRADING_CONNECTION = 0;
+  POSITION_CONNECTION = 1;
+  MARKET_DATA_CONNECTION = 2;
+}
+
+message Login {
+  string user = 1;
+  string password = 2;
+  ConnectionType connectionType = 3;
+  string accessToken = 4;
+}
+
+message LoginResponse {
+  ConnectionType connectionType = 1;
+  string ninja = 2;
+  repeated string accounts = 3;
+}
+
+
+message NinjaInfo {
+  string name = 1;
+}
+
+message Accounts {
+  repeated string accounts = 1;
+}
+
