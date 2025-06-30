@@ -55,13 +55,13 @@ class PositionsClient(NinjaApiClient):
                 resp.ParseFromString(msg.payload)
                 contract = NinjaApiContracts_pb2.Contract()
                 contract.exchange = NinjaApiCommon_pb2.Exchange.CME
-                contract.secDesc = "ZSN5"
-                self.getPositions("ACCT1", contract)
+                contract.secDesc = "NQU5"
+                self.getPositions("FW077", contract)
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.POSITIONS_RESPONSE:
                 resp = NinjaApiPositions_pb2.Positions()
                 resp.ParseFromString(msg.payload)
                 for position in resp.positions:
-                  logging.info(position)
+                    logging.info(position)
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.ERROR:
                 error = NinjaApiMessages_pb2.Error()
                 error.ParseFromString(msg.payload)
