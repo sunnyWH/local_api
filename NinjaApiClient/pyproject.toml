@@ -8,7 +8,7 @@ packages = [{include = "ninja_api_client"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-protobuf = "^3.15.8"
+protobuf = "3.15.8"
 black = "^24.8.0"
 pydantic-settings = "^2.6.1"
 

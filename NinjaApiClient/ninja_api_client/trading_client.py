@@ -43,9 +43,9 @@ class TradingClient(NinjaApiClient):
         startmd = NinjaApiMarketData_pb2.StartMarketData()
         contract = startmd.contracts.add()
         contract.exchange = NinjaApiCommon_pb2.Exchange.CME
-        contract.secDesc = "NQM5"
-        contract.whName = "NQM5"
-        startmd.cadence.duration = 1000 # 1s
+        contract.secDesc = "NQU5"
+        contract.whName = "NQU5"
+        startmd.cadence.duration = 1000  # 1s
         startmd.includeImplieds = True
         startmd.includeTradeUpdates = True
         container.header.msgType = NinjaApiMessages_pb2.Header.START_MARKET_DATA_REQUEST
@@ -180,7 +180,9 @@ class TradingClient(NinjaApiClient):
                             f"on {settlement.date.month}/{settlement.date.day}/{settlement.date.year} "
                             f"has final settlement {settlement.final}."
                         )
-            elif msg.header.msgType == NinjaApiMessages_pb2.Header.WORKING_RULES_RESPONSE:
+            elif (
+                msg.header.msgType == NinjaApiMessages_pb2.Header.WORKING_RULES_RESPONSE
+            ):
                 resp = NinjaApiWorkingRules_pb2.WorkingRules()
                 resp.ParseFromString(msg.payload)
                 for rule in resp.workingRules:
@@ -188,29 +190,45 @@ class TradingClient(NinjaApiClient):
                         f"Found working rule '{rule.prefix}' "
                         f"with type {NinjaApiWorkingRules_pb2.WorkingRule.WorkType.Name(rule.workType)}"
                     )
-            elif msg.header.msgType == NinjaApiMessages_pb2.Header.PRICE_FEED_STATUS_RESPONSE:
+            elif (
+                msg.header.msgType
+                == NinjaApiMessages_pb2.Header.PRICE_FEED_STATUS_RESPONSE
+            ):
                 resp = NinjaApiMarketData_pb2.PriceFeedStatus()
                 resp.ParseFromString(msg.payload)
-                logging.info(f"Price feed status is {NinjaApiMarketData_pb2.PriceFeedStatus.Status.Name(resp.status)}")
+                logging.info(
+                    f"Price feed status is {NinjaApiMarketData_pb2.PriceFeedStatus.Status.Name(resp.status)}"
+                )
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.MARKET_UPDATES:
                 resp = NinjaApiMarketData_pb2.MarketUpdates()
                 resp.ParseFromString(msg.payload)
                 for update in resp.marketUpdates:
                     logging.info(f"Contract: {update.contract.secDesc}")
-                    logging.info(f"Bid Qty: {update.tobUpdate.bidQty} | Bid: {update.tobUpdate.bidPrice} | Ask: {update.tobUpdate.askPrice} | Ask Qty: {update.tobUpdate.askQty}")
-                    logging.info(f"{len(update.tradeUpdates)} trades have occurred since the last market update")
+                    logging.info(
+                        f"Bid Qty: {update.tobUpdate.bidQty} | Bid: {update.tobUpdate.bidPrice} | Ask: {update.tobUpdate.askPrice} | Ask Qty: {update.tobUpdate.askQty}"
+                    )
+                    logging.info(
+                        f"{len(update.tradeUpdates)} trades have occurred since the last market update"
+                    )
                 md_update_count += 1
                 if md_update_count == 5:
                     # Stop receiving market updates after the first 10 updates have been received
                     stopmd = NinjaApiMarketData_pb2.StopMarketData()
-                    container.header.msgType = NinjaApiMessages_pb2.Header.STOP_MARKET_DATA_REQUEST
+                    container.header.msgType = (
+                        NinjaApiMessages_pb2.Header.STOP_MARKET_DATA_REQUEST
+                    )
                     container.payload = stopmd.SerializeToString()
                     self.send_msg(container)
-            elif msg.header.msgType == NinjaApiMessages_pb2.Header.SECURITY_STATUSES_RESPONSE:
+            elif (
+                msg.header.msgType
+                == NinjaApiMessages_pb2.Header.SECURITY_STATUSES_RESPONSE
+            ):
                 resp = NinjaApiMarketData_pb2.SecurityStatuses()
                 resp.ParseFromString(msg.payload)
                 for secStatus in resp.statuses:
-                    logging.info(f"Security status for {secStatus.contract.secDesc} is {NinjaApiMarketData_pb2.SecurityStatus.Status.Name(secStatus.status)}")
+                    logging.info(
+                        f"Security status for {secStatus.contract.secDesc} is {NinjaApiMarketData_pb2.SecurityStatus.Status.Name(secStatus.status)}"
+                    )
             time.sleep(0.01)
 
         self.disconnect()
