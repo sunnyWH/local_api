@@ -1,22 +1,91 @@
-import logging
-import time
-
-import NinjaApiCommon_pb2
-import NinjaApiContracts_pb2
-import NinjaApiMarketData_pb2
-import NinjaApiMessages_pb2
-import NinjaApiSheets_pb2
-import NinjaApiWorkingRules_pb2
-
 from ninja_api_client import NinjaApiClient
 from config import settings
 
+import NinjaApiWorkingRules_pb2
+import NinjaApiMarketData_pb2
+import NinjaApiContracts_pb2
+import NinjaApiMessages_pb2
+import NinjaApiSheets_pb2
+import NinjaApiCommon_pb2
+
+import logging
+import time
+
+# USER IMPORTS
+from sqlalchemy import create_engine
+from collections import deque
+import pandas as pd
+import numpy as np
+
 
 class TradingClient(NinjaApiClient):
+
     def __init__(self):
         super().__init__(settings.trading_host, settings.trading_port)
+        # CONSTANT PARAMETERS
+        self.product = "NQU5"
+        self.product_div = 100
+        self.vote_div = 2
+        self.vote_count = 3
+        self.lookback = 250
+        # DYNAMIC PARAMETERS
+        self.votes = deque(maxlen=self.lookback)
+        self.vote_total = 0
+        self.last_price = None
+
+    def warmup(self):
+        engine = create_engine(
+            "postgresql+psycopg2://tickreader:tickreader@tsdb:5432/cme"
+        )
+        query = f"""
+            SELECT wh_name, t_price, sending_time
+            FROM nq_fut_trades_weekly
+            WHERE wh_name = %s
+            ORDER BY sending_time DESC
+            LIMIT 500_000 
+        """
+        df = pd.read_sql(query, engine, params=(self.product,))
+        df.drop(columns=["wh_name"], inplace=True)
+        df["sending_time"] = pd.to_datetime(df["sending_time"])
+        df.index = df["sending_time"]
+        df = df.sort_index()
+        time_diffs = df.index.to_series().diff()
+        gap_mask = time_diffs > pd.Timedelta(minutes=55)  # don't use overnight
+        last_gap_index = gap_mask[gap_mask].index[-1] if gap_mask.any() else None
+        df = df[df.index < pd.to_datetime(last_gap_index)].copy()
+        df["minute"] = df["sending_time"].dt.floor("min")
+        mask = df["sending_time"] > df["minute"]
+        df = df[mask]
+        df = df.loc[df.groupby("minute")["sending_time"].idxmax()]  # last traded price
+        df = df.drop(columns=["sending_time", "minute"])
+        moves = df["t_price"].diff() / self.product_div
+        for move in moves:
+            self.add_votes(move, to_print=True)
+
+    def add_votes(self, move, to_print=False):
+        if not isinstance(move, (int, float)):
+            logging.info(f"Move given is not valid: {move}")
+            return
+        if np.isnan(move):
+            logging.info(f"Move given is NA: {move}")
+            return
+        to_add = int(move / self.vote_div)
+        if to_add > 0:
+            for i in np.arange(to_add):
+                self.votes.append(1)
+        elif to_add < 0:
+            for i in np.arange(abs(to_add)):
+                self.votes.append(-1)
+        self.vote_total = sum(self.votes)
+        if to_print:
+            logging.info(
+                f"Change: {move}, Votes: {to_add}, Total Vote: {self.vote_total}"
+            )
 
     def run(self):
+        ##________________________________________________________________________________
+        ## WARMUP
+        self.warmup()
         ##________________________________________________________________________________
         ## LOGIN
         login = NinjaApiMessages_pb2.Login()
@@ -49,8 +118,8 @@ class TradingClient(NinjaApiClient):
         startmd = NinjaApiMarketData_pb2.StartMarketData()
         contract = startmd.contracts.add()
         contract.exchange = NinjaApiCommon_pb2.Exchange.CME
-        contract.secDesc = "NQU5"
-        contract.whName = "NQU5"
+        contract.secDesc = self.product
+        contract.whName = self.product
         startmd.cadence.duration = 1000  # 1s
         startmd.includeImplieds = True
         startmd.includeTradeUpdates = True
