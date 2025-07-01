@@ -13,9 +13,12 @@ import time
 
 # USER IMPORTS
 from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
+from datetime import datetime, time
 from collections import deque
 import pandas as pd
 import numpy as np
+import psycopg2
 
 
 class TradingClient(NinjaApiClient):
@@ -24,63 +27,115 @@ class TradingClient(NinjaApiClient):
         super().__init__(settings.trading_host, settings.trading_port)
         # CONSTANT PARAMETERS
         self.product = "NQU5"
-        self.product_div = 100
-        self.vote_div = 2
-        self.vote_count = 3
-        self.lookback = 250
+        self.productDiv = 100
+        self.voteDiv = 2
+        self.voteCount = 250
+        self.finalVotesCount = 3
+        self.toPrint = True
+
         # DYNAMIC PARAMETERS
-        self.votes = deque(maxlen=self.lookback)
-        self.vote_total = 0
-        self.last_price = None
+        self.signal = 0
+        self.votes = deque(maxlen=self.voteCount)
+        self.finalVotes = deque(maxlen=self.finalVotesCount)
+        self.votesFull = False
+        self.voteTotal = 0
+        self.lastPrice = None
+        self.lastTime = None
+        self.currentTime = None
+        self.inMarket = None
 
     def warmup(self):
         engine = create_engine(
-            "postgresql+psycopg2://tickreader:tickreader@tsdb:5432/cme"
+            "postgresql+psycopg2://tickreader:tickreader@tsdb:5432/cme",
+            poolclass=NullPool,  # don't reuse connections — safe for scripts
+            connect_args={"connect_timeout": 5},
         )
         query = f"""
             SELECT wh_name, t_price, sending_time
             FROM nq_fut_trades_weekly
             WHERE wh_name = %s
             ORDER BY sending_time DESC
-            LIMIT 500_000 
+            LIMIT 250_000
         """
-        df = pd.read_sql(query, engine, params=(self.product,))
+        try:
+            with engine.connect() as conn:
+                df = pd.read_sql(query, conn, params=(self.product,))
+        except Exception as e:
+            print("Error:", e)
+        finally:
+            engine.dispose()
         df.drop(columns=["wh_name"], inplace=True)
         df["sending_time"] = pd.to_datetime(df["sending_time"])
         df.index = df["sending_time"]
         df = df.sort_index()
-        time_diffs = df.index.to_series().diff()
-        gap_mask = time_diffs > pd.Timedelta(minutes=55)  # don't use overnight
-        last_gap_index = gap_mask[gap_mask].index[-1] if gap_mask.any() else None
-        df = df[df.index < pd.to_datetime(last_gap_index)].copy()
+        times = df.index.time
+        mask = (times >= pd.to_datetime("08:30").time()) & (
+            times < pd.to_datetime("17:00").time()
+        )
+        df = df[mask].copy()
         df["minute"] = df["sending_time"].dt.floor("min")
-        mask = df["sending_time"] > df["minute"]
-        df = df[mask]
-        df = df.loc[df.groupby("minute")["sending_time"].idxmax()]  # last traded price
+        # mask = df["sending_time"] > df["minute"]
+        # df = df[mask]
+        df = df.loc[df.groupby("minute")["sending_time"].idxmin()]  # last traded price
         df = df.drop(columns=["sending_time", "minute"])
-        moves = df["t_price"].diff() / self.product_div
+        moves = df["t_price"].diff() / self.productDiv
         for move in moves:
-            self.add_votes(move, to_print=True)
+            self.add_votes(move, toPrint=self.toPrint)
+            self.check_votes_for_final_votes(toPrint=self.toPrint)
+            self.check_signal_from_final_votes(toPrint=self.toPrint)
 
-    def add_votes(self, move, to_print=False):
+    def add_votes(self, move, toPrint=False):
         if not isinstance(move, (int, float)):
             logging.info(f"Move given is not valid: {move}")
             return
         if np.isnan(move):
             logging.info(f"Move given is NA: {move}")
             return
-        to_add = int(move / self.vote_div)
+        to_add = int(move / self.voteDiv)
         if to_add > 0:
             for i in np.arange(to_add):
                 self.votes.append(1)
         elif to_add < 0:
             for i in np.arange(abs(to_add)):
                 self.votes.append(-1)
-        self.vote_total = sum(self.votes)
-        if to_print:
+        self.voteTotal = sum(self.votes)
+        if toPrint:
             logging.info(
-                f"Change: {move}, Votes: {to_add}, Total Vote: {self.vote_total}"
+                f"Change: {move}, Votes: {to_add}, Total Vote: {self.voteTotal}"
             )
+
+    def check_votes_for_final_votes(self, toPrint=False):
+        if len(self.votes) == self.voteCount and not self.votesFull:
+            if toPrint:
+                logging.info("Votes Full")
+            self.votesFull = True
+        if self.votesFull:
+            if self.voteTotal > 0:
+                self.finalVotes.append(1)
+            elif self.voteTotal < 0:
+                self.finalVotes.append(-1)
+            else:
+                pass
+
+    def check_signal_from_final_votes(self, toPrint=False):
+        if sum(self.finalVotes) == self.finalVotesCount:
+            self.signal = 1
+            if toPrint:
+                logging.info(
+                    f"FinalVotes: {list(self.finalVotes)}, Signal: {self.signal}"
+                )
+        elif sum(self.finalVotes) == -1 * self.finalVotesCount:
+            self.signal = -1
+            if toPrint:
+                logging.info(
+                    f"FinalVotes: {list(self.finalVotes)}, Signal: {self.signal}"
+                )
+        else:
+            self.signal = 0
+            if toPrint:
+                logging.info(
+                    f"FinalVotes: {list(self.finalVotes)}, Signal: {self.signal}"
+                )
 
     def run(self):
         ##________________________________________________________________________________
@@ -120,7 +175,7 @@ class TradingClient(NinjaApiClient):
         contract.exchange = NinjaApiCommon_pb2.Exchange.CME
         contract.secDesc = self.product
         contract.whName = self.product
-        startmd.cadence.duration = 1000  # 1s
+        startmd.cadence.duration = 1000  # in milliseconds
         startmd.includeImplieds = True
         startmd.includeTradeUpdates = True
         container.header.msgType = NinjaApiMessages_pb2.Header.START_MARKET_DATA_REQUEST
@@ -130,6 +185,7 @@ class TradingClient(NinjaApiClient):
         hb_count = 0
         md_update_count = 0
         while self.connected:  ## ONCE MARKET DATA IS DISCONNECTED, STOP THE CONNECTION
+            self.currentTime = datetine.now().time()
             msg = self.recv_msg()
             if not msg:
                 continue
@@ -139,8 +195,39 @@ class TradingClient(NinjaApiClient):
             )
             if msg.header.msgType == NinjaApiMessages_pb2.Header.HEARTBEAT:
                 hb_count += 1
-                if hb_count == 3:
+                if hb_count == 2:
                     break  # Exit loop after receiving 3 heartbeats
+            ##________________________________________________________________________________
+            ## ON EVERY MARKET UPDATE
+            elif msg.header.msgType == NinjaApiMessages_pb2.Header.MARKET_UPDATES:
+                resp = NinjaApiMarketData_pb2.MarketUpdates()
+                resp.ParseFromString(msg.payload)
+                for update in resp.marketUpdates:
+                    logging.info(f"Contract: {update.contract.secDesc}")
+                    logging.info(
+                        f"Bid Qty: {update.tobUpdate.bidQty} | Bid: {update.tobUpdate.bidPrice} | Ask: {update.tobUpdate.askPrice} | Ask Qty: {update.tobUpdate.askQty}"
+                    )
+                    logging.info(
+                        f"{len(update.tradeUpdates)} trades have occurred since the last market update"
+                    )
+                    if len(update.tradeUpdates) > 0:
+                        firstTrade = update.tradeUpdates[0]
+                        logging.info(
+                            f"{firstTrade.transactTime.timestamp}: {firstTrade.tradePrice}, {firstTrade.tradeQty}"
+                        )
+                        latestTrade = update.tradeUpdates[-1]
+                        logging.info(
+                            f"{latestTrade.transactTime.timestamp}: {latestTrade.tradePrice}, {latestTrade.tradeQty}"
+                        )
+                md_update_count += 1
+                if md_update_count == 6:
+                    # Stop receiving market updates after the first 5 updates have been received
+                    stopmd = NinjaApiMarketData_pb2.StopMarketData()
+                    container.header.msgType = (
+                        NinjaApiMessages_pb2.Header.STOP_MARKET_DATA_REQUEST
+                    )
+                    container.payload = stopmd.SerializeToString()
+                    self.send_msg(container)
             ##________________________________________________________________________________
             ## PRINT AVAILABLE FIELDS
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.ERROR:
@@ -286,28 +373,6 @@ class TradingClient(NinjaApiClient):
                     logging.info(
                         f"Security status for {secStatus.contract.secDesc} is {NinjaApiMarketData_pb2.SecurityStatus.Status.Name(secStatus.status)}"
                     )
-            ##________________________________________________________________________________
-            ## ON EVERY MARKET UPDATE
-            elif msg.header.msgType == NinjaApiMessages_pb2.Header.MARKET_UPDATES:
-                resp = NinjaApiMarketData_pb2.MarketUpdates()
-                resp.ParseFromString(msg.payload)
-                for update in resp.marketUpdates:
-                    logging.info(f"Contract: {update.contract.secDesc}")
-                    logging.info(
-                        f"Bid Qty: {update.tobUpdate.bidQty} | Bid: {update.tobUpdate.bidPrice} | Ask: {update.tobUpdate.askPrice} | Ask Qty: {update.tobUpdate.askQty}"
-                    )
-                    logging.info(
-                        f"{len(update.tradeUpdates)} trades have occurred since the last market update"
-                    )
-                md_update_count += 1
-                if md_update_count == 6:
-                    # Stop receiving market updates after the first 5 updates have been received
-                    stopmd = NinjaApiMarketData_pb2.StopMarketData()
-                    container.header.msgType = (
-                        NinjaApiMessages_pb2.Header.STOP_MARKET_DATA_REQUEST
-                    )
-                    container.payload = stopmd.SerializeToString()
-                    self.send_msg(container)
             time.sleep(0.01)
 
         self.disconnect()
