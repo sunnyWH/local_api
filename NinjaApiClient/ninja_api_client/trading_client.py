@@ -11,11 +11,13 @@ import NinjaApiCommon_pb2
 import logging
 import time
 
+from HELPERS import TradingLogger
+
 # USER IMPORTS
+from datetime import time as datetimeTime
+from datetime import datetime, timedelta
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
-from datetime import datetime, timedelta
-from datetime import time as datetimeTime
 from collections import deque
 import pandas as pd
 import numpy as np
@@ -36,6 +38,8 @@ class TradingClient(NinjaApiClient):
         self.marketStart = datetimeTime(8, 30)
         self.marketEnd = datetimeTime(14, 59)
         self.printed = False
+        self.printedClosed = False
+        self.logger = TradingLogger()
 
         # DYNAMIC PARAMETERS
         self.signal = 0
@@ -47,6 +51,9 @@ class TradingClient(NinjaApiClient):
         self.lastTime = None
         self.currentTime = None
         self.inMarket = None
+        self.position = 0
+        self.entryPrices = None
+        self.initialTradeTime = None
 
     def user_quits(self):
         while True:
@@ -56,6 +63,12 @@ class TradingClient(NinjaApiClient):
                 stopmd = NinjaApiMarketData_pb2.StopMarketData()
                 container.header.msgType = (
                     NinjaApiMessages_pb2.Header.STOP_MARKET_DATA_REQUEST
+                )
+                self.logger.log_trade(
+                    datetime.now().time(),
+                    self.lastPrice,
+                    -self.position,
+                    "PROGRAM_FLATTEN",
                 )
                 logging.info("Stopping market connection...")
                 container.payload = stopmd.SerializeToString()
@@ -206,14 +219,33 @@ class TradingClient(NinjaApiClient):
         self.send_msg(container)
 
         hb_count = 0
-        while self.connected:  ## ONCE MARKET DATA IS DISCONNECTED, STOP THE CONNECTION
-            self.currentTime = datetime.now().time()
+        while self.connected:
+            # GET THE CORRECT TIMES
+            self.currentTime = datetime.now()
             if (
-                self.marketStart <= self.currentTime <= self.marketEnd
+                self.marketStart <= self.currentTime.time() <= self.marketEnd
                 and not self.printed
             ):
+                logging.info(f"In Market Hours")
                 self.printed = True
+                self.printedClosed = False
                 self.inMarket = True
+            if (
+                not self.marketStart <= self.currentTime.time() <= self.marketEnd
+                and not self.printedClosed
+            ):
+                logging.info(f"Outside of Market Hours, flattening...")
+                self.logger.log_trade(
+                    datetime.now().time(),
+                    self.lastPrice,
+                    -self.position,
+                    "MARKET_FLATTEN",
+                )
+                self.position = 0
+                self.printed = False
+                self.printedClosed = True
+                self.inMarket = False
+
             if self.inMarket:
                 if self.lastTime is None:
                     self.lastTime = self.currentTime.replace(second=0, microsecond=0)
@@ -235,39 +267,100 @@ class TradingClient(NinjaApiClient):
                 resp = NinjaApiMarketData_pb2.MarketUpdates()
                 resp.ParseFromString(msg.payload)
                 for update in resp.marketUpdates:
-
                     if len(update.tradeUpdates) > 0:
                         latestTrade = update.tradeUpdates[-1]
                         latestTradePrice = latestTrade.tradePrice / self.productDiv
+                        bid = update.tobUpdate.bidPrice
+                        ask = update.tobUpdate.askPrice
                         # logging.info(
                         #     f"{latestTrade.transactTime.timestamp}: {latestTradePrice}, {latestTrade.tradeQty}"
                         # )
-                        if datetime.combine(
-                            datetime.today().date(), self.currentTime
-                        ) > datetime.combine(
-                            datetime.today().date(), self.lastTime
-                        ) + timedelta(
-                            seconds=60
-                        ):
-                            logging.info(f"Contract: {update.contract.secDesc}")
-                            logging.info(
-                                f"Bid Qty: {update.tobUpdate.bidQty} | Bid: {update.tobUpdate.bidPrice} | Ask: {update.tobUpdate.askPrice} | Ask Qty: {update.tobUpdate.askQty}"
-                            )
-                            if self.lastPrice is None:
-                                self.lastPrice = latestTradePrice
+                        if self.inMarket:
+                            if self.currentTime > self.lastTime + timedelta(seconds=60):
+                                logging.info(f"Contract: {update.contract.secDesc}")
                                 logging.info(
-                                    f"Established latestPrice: {latestTradePrice}"
+                                    f"Bid Qty: {update.tobUpdate.bidQty} | Bid: {update.tobUpdate.bidPrice} | Ask: {update.tobUpdate.askPrice} | Ask Qty: {update.tobUpdate.askQty}"
                                 )
-                            else:
-                                move = latestTradePrice - self.lastPrice
-                                self.add_votes(move, toPrint=self.toPrint)
-                                self.check_votes_for_final_votes(toPrint=self.toPrint)
-                                self.check_signal_from_final_votes(toPrint=self.toPrint)
-                                self.lastPrice = latestTradePrice
-                            logging.info(f"Latest Price: {latestTradePrice}")
-                            self.lastTime = self.currentTime.replace(
-                                second=0, microsecond=0
-                            )
+                                if self.lastPrice is None:
+                                    self.lastPrice = latestTradePrice
+                                    logging.info(
+                                        f"Established latestPrice: {latestTradePrice}"
+                                    )
+                                else:
+                                    move = latestTradePrice - self.lastPrice
+                                    self.add_votes(move, toPrint=self.toPrint)
+                                    self.check_votes_for_final_votes(
+                                        toPrint=self.toPrint
+                                    )
+                                    self.check_signal_from_final_votes(
+                                        toPrint=self.toPrint
+                                    )
+                                    self.lastPrice = latestTradePrice
+                                logging.info(f"Latest Price: {latestTradePrice}")
+
+                                # DIFFERENT LOGIC BASED ON DIFFERENT POSITIONS
+                                # signal flip, if we have any position, flatten
+                                if self.position * self.signal <= 0:
+                                    if self.position > 0:
+                                        self.logger.log_trade(
+                                            self.currentTime.time(),
+                                            bid,
+                                            -self.position,
+                                            "EXIT-SIGNAL",
+                                        )
+                                        self.position = 0
+                                    if self.position < 0:
+                                        self.logger.log_trade(
+                                            self.currentTime.time(),
+                                            ask,
+                                            -self.position,
+                                            "EXIT-SIGNAL",
+                                        )
+                                        self.position = 0
+
+                                # start trade if position 0
+                                elif self.position == 0:
+                                    if self.signal == -1:
+                                        self.logger.log_trade(
+                                            self.currentTime.time(),
+                                            bid,
+                                            -1,
+                                            "START_SELL",
+                                        )
+                                        self.position = -1
+                                        self.entryPrices = [bid]
+                                        self.initialTradeTime = (
+                                            self.currentTime.time().replace(
+                                                second=0, microsecond=0
+                                            )
+                                        )
+                                    elif self.signal == 1:
+                                        self.logger.log_trade(
+                                            self.currentTime.time(),
+                                            ask,
+                                            1,
+                                            "START_BUY",
+                                        )
+                                        self.position = 1
+                                        self.entryPrices = [ask]
+                                        self.initialTradeTime = (
+                                            self.currentTime.time().replace(
+                                                second=0, microsecond=0
+                                            )
+                                        )
+                                elif self.position > 0:
+                                    if (
+                                        self.currentTime
+                                        > self.initialTradeTime
+                                        + timedelta(seconds=35 * 60)
+                                    ):
+                                        if self.position != 5:
+                                            self.position += 1
+
+                                self.lastTime = self.currentTime.replace(
+                                    second=0, microsecond=0
+                                )
+
             ##________________________________________________________________________________
             ## PRINT AVAILABLE FIELDS
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.ERROR:
