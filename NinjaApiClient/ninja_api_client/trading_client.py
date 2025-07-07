@@ -109,7 +109,13 @@ class TradingClient(NinjaApiClient):
         finally:
             engine.dispose()
         df.drop(columns=["wh_name"], inplace=True)
-        df["sending_time"] = pd.to_datetime(df["sending_time"])
+        df["sending_time"] = df["sending_time"].str.replace(
+            r"(\.\d{6})\d+", r"\1", regex=True
+        )
+        df["sending_time"] = pd.to_datetime(
+            df["sending_time"], format="%Y-%m-%d %H:%M:%S.%f %z"
+        )
+        # df["sending_time"] = pd.to_datetime(df["sending_time"])
         df.index = df["sending_time"]
         df = df.sort_index()
         times = df.index.time
@@ -186,7 +192,7 @@ class TradingClient(NinjaApiClient):
 
     def flatten(self, price, tag):
         self.logger.log_trade(
-            self.currentTime,
+            self.currentTime.time(),
             price,
             -self.position,
             tag,
@@ -196,7 +202,7 @@ class TradingClient(NinjaApiClient):
         self.loss = None
         self.position = 0
 
-    def tickRound(num, div=4):
+    def tickRound(self, num, div=4):
         return round(num * div) / div
 
     def run(self):
@@ -298,7 +304,7 @@ class TradingClient(NinjaApiClient):
                         self.ask = update.tobUpdate.askPrice / self.productDiv
                         if self.inMarket:
                             # check gains and stops at every update on bid/ask
-                            if position > 0:
+                            if self.position > 0:
                                 if self.bid > self.gain:
                                     logging.info(
                                         f"GAIN HIT: {-self.position}, {self.gain}"
@@ -312,7 +318,7 @@ class TradingClient(NinjaApiClient):
                                     if abs(self.position) != 1:
                                         self.signalFlip = 0
                                     self.flatten(self.loss, "LOSS_FLATTEN")
-                            elif position < 0:
+                            elif self.position < 0:
                                 if self.ask < self.gain:
                                     logging.info(
                                         f"GAIN HIT: {-self.position}, {self.gain}"
@@ -352,7 +358,10 @@ class TradingClient(NinjaApiClient):
 
                                 # DIFFERENT LOGIC BASED ON DIFFERENT POSITIONS
                                 # signal flip, if we have any position, flatten
-                                if self.position * self.signal <= 0:
+                                if (
+                                    self.position * self.signal <= 0
+                                    and self.position != 0
+                                ):
                                     if self.position > 0:
                                         self.logger.log_trade(
                                             self.currentTime.time(),
@@ -386,14 +395,14 @@ class TradingClient(NinjaApiClient):
                                         self.signalFlip = -1
                                         self.entryPrices = [self.bid]
                                         self.initialTradeTime = (
-                                            self.currentTime.time().replace(
+                                            self.currentTime.replace(
                                                 second=0, microsecond=0
                                             )
                                         )
-                                        self.gain = tickRound(
+                                        self.gain = self.tickRound(
                                             self.latestTradePrice * (1 - self.gainLimit)
                                         )
-                                        self.loss = tickRound(
+                                        self.loss = self.tickRound(
                                             self.latestTradePrice * (1 + self.lossLimit)
                                         )
                                     elif (
@@ -414,10 +423,10 @@ class TradingClient(NinjaApiClient):
                                                 second=0, microsecond=0
                                             )
                                         )
-                                        self.gain = tickRound(
+                                        self.gain = self.tickRound(
                                             self.latestTradePrice * (1 + self.gainLimit)
                                         )
-                                        self.loss = tickRound(
+                                        self.loss = self.tickRound(
                                             self.latestTradePrice * (1 - self.lossLimit)
                                         )
 

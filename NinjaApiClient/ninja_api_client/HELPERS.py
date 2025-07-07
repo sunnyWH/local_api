@@ -1,5 +1,6 @@
 import csv
 import os
+import logging
 from datetime import datetime
 
 
@@ -31,4 +32,4 @@ class TradingLogger:
         with open(self.filename, mode="a", newline="") as f:
             writer = csv.writer(f)
             writer.writerow([time, price, quantity, notes])
-            # print(f"Logged trade: {price} @ {now.strftime('%H:%M:%S')} ({quantity})")
+            logging.info(f"Logged trade: {price}, {quantity}, {notes}")
