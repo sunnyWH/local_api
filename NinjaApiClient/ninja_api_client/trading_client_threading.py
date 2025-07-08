@@ -403,12 +403,15 @@ class TradingClient(NinjaApiClient):
                 )
 
     def flatten(self, price, tag):
-        self.logger.log_trade(
-            self.currentTime.time(),
-            price,
-            -self.position,
-            tag,
-        )
+        if self.position is not 0:
+            self.logger.log_trade(
+                self.currentTime.time(),
+                price,
+                -self.position,
+                tag,
+            )
+        else:
+            logging.info("Flatten attempted, position already 0")
         self.initialTradeTime = None
         self.gain = None
         self.loss = None
