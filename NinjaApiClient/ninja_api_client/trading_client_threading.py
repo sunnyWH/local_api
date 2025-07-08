@@ -88,6 +88,218 @@ class TradingClient(NinjaApiClient):
                 logging.info("Disconnecting...")
                 self.disconnect()
 
+    def trade_logic(self):
+        while True:
+            while self.inMarket:
+                # EVERY TOP OF THE MINUTE...
+                self.currentTime = datetime.now()
+                if self.currentTime > self.lastTime + timedelta(seconds=60):
+                    logging.info(f"Contract: {self.product}")
+                    logging.info(f"Bid: {self.bid} | Ask: {self.ask}")
+                    if self.lastPrice is None:
+                        self.lastPrice = self.latestTradePrice
+                        logging.info(
+                            f"Established Latest Price: {self.latestTradePrice}"
+                        )
+                    else:
+                        move = self.latestTradePrice - self.lastPrice
+                        self.add_votes(move, toPrint=self.toPrint)
+                        self.check_votes_for_final_votes(toPrint=self.toPrint)
+                        self.check_signal_from_final_votes(toPrint=self.toPrint)
+                        self.lastPrice = self.latestTradePrice
+                    logging.info(f"Latest Price: {self.latestTradePrice}")
+
+                    # DIFFERENT LOGIC BASED ON DIFFERENT POSITIONS
+                    # signal flip, if we have any position, flatten
+                    if self.position * self.signal <= 0 and self.position != 0:
+                        if self.position > 0:
+                            self.logger.log_trade(
+                                self.currentTime.time(),
+                                self.bid,
+                                -self.position,
+                                "EXIT-SIGNAL",
+                            )
+                            self.position = 0
+                        if self.position < 0:
+                            self.logger.log_trade(
+                                self.currentTime.time(),
+                                self.ask,
+                                -self.position,
+                                "EXIT-SIGNAL",
+                            )
+                            self.position = 0
+
+                    # start trade if position 0 and signalFlip is reset
+                    elif self.position == 0:
+                        if self.signal == -1 and self.signalFlip != self.signal:
+                            self.logger.log_trade(
+                                self.currentTime.time(),
+                                self.bid,
+                                -1,
+                                "START_SELL",
+                            )
+                            self.position = -1
+                            self.signalFlip = -1
+                            self.entryPrices = [self.bid]
+                            self.initialTradeTime = self.currentTime.replace(
+                                second=0, microsecond=0
+                            )
+                            self.gain = self.tickRound(
+                                self.latestTradePrice * (1 - self.gainLimit)
+                            )
+                            self.loss = self.tickRound(
+                                self.latestTradePrice * (1 + self.lossLimit)
+                            )
+                        elif self.signal == 1 and self.signalFlip != self.signal:
+                            self.logger.log_trade(
+                                self.currentTime.time(),
+                                self.ask,
+                                1,
+                                "START_BUY",
+                            )
+                            self.position = 1
+                            self.signalFlip = 1
+                            self.entryPrices = [self.ask]
+                            self.initialTradeTime = self.currentTime.replace(
+                                second=0, microsecond=0
+                            )
+                            self.gain = self.tickRound(
+                                self.latestTradePrice * (1 + self.gainLimit)
+                            )
+                            self.loss = self.tickRound(
+                                self.latestTradePrice * (1 - self.lossLimit)
+                            )
+
+                    # position is positive, do our adding checks
+                    elif self.position > 0:
+                        if self.currentTime > self.initialTradeTime + timedelta(
+                            seconds=self.check4 * 60
+                        ):
+                            if np.mean(self.entryPrices) > self.latestTradePrice:
+                                self.signalFlip = 0
+                                self.flatten(self.bid, "PNL5_FLATTEN")
+                            elif self.position < 5:
+                                last_pos = self.position
+                                self.position += 1
+                                self.logger.log_trade(
+                                    self.currentTime.time(),
+                                    self.ask,
+                                    self.position - last_pos,
+                                    "ADD5_BUY",
+                                )
+                        elif self.currentTime > self.initialTradeTime + timedelta(
+                            seconds=self.check3 * 60
+                        ):
+                            if np.mean(self.entryPrices) > self.latestTradePrice:
+                                self.signalFlip = 0
+                                self.flatten(self.bid, "PNL4_FLATTEN")
+                            elif self.position < 4:
+                                last_pos = self.position
+                                self.position += 1
+                                self.logger.log_trade(
+                                    self.currentTime.time(),
+                                    self.ask,
+                                    self.position - last_pos,
+                                    "ADD4_BUY",
+                                )
+                        elif self.currentTime > self.initialTradeTime + timedelta(
+                            seconds=self.check2 * 60
+                        ):
+                            if np.mean(self.entryPrices) > self.latestTradePrice:
+                                self.signalFlip = 0
+                                self.flatten(self.bid, "PNL3_FLATTEN")
+                            elif self.position < 3:
+                                last_pos = self.position
+                                self.position += 1
+                                self.logger.log_trade(
+                                    self.currentTime.time(),
+                                    self.ask,
+                                    self.position - last_pos,
+                                    "ADD3_BUY",
+                                )
+                        elif self.currentTime > self.initialTradeTime + timedelta(
+                            seconds=self.check1 * 60
+                        ):
+                            if np.mean(self.entryPrices) > self.latestTradePrice:
+                                self.flatten(self.bid, "PNL2_FLATTEN")
+                            elif self.position < 2:
+                                last_pos = self.position
+                                self.position += 1
+                                self.logger.log_trade(
+                                    self.currentTime.time(),
+                                    self.ask,
+                                    self.position - last_pos,
+                                    "ADD2_BUY",
+                                )
+
+                    # position is negative, do our adding checks
+                    elif self.position < 0:
+                        if self.currentTime > self.initialTradeTime + timedelta(
+                            seconds=self.check4 * 60
+                        ):
+                            if np.mean(self.entryPrices) < self.latestTradePrice:
+                                self.signalFlip = 0
+                                self.flatten(self.ask, "PNL5_FLATTEN")
+                            elif self.position > -5:
+                                last_pos = self.position
+                                self.position -= 1
+                                self.logger.log_trade(
+                                    self.currentTime.time(),
+                                    self.bid,
+                                    self.position - last_pos,
+                                    "ADD5_SELL",
+                                )
+                        elif self.currentTime > self.initialTradeTime + timedelta(
+                            seconds=self.check3 * 60
+                        ):
+                            if np.mean(self.entryPrices) < self.latestTradePrice:
+                                self.signalFlip = 0
+                                self.flatten(self.ask, "PNL4_FLATTEN")
+                            elif self.position > -4:
+                                last_pos = self.position
+                                self.position -= 1
+                                self.logger.log_trade(
+                                    self.currentTime.time(),
+                                    self.bid,
+                                    self.position - last_pos,
+                                    "ADD4_SELL",
+                                )
+                        elif self.currentTime > self.initialTradeTime + timedelta(
+                            seconds=self.check2 * 60
+                        ):
+                            if np.mean(self.entryPrices) < self.latestTradePrice:
+                                self.signalFlip = 0
+                                self.flatten(self.ask, "PNL3_FLATTEN")
+                            elif self.position > -3:
+                                last_pos = self.position
+                                self.position -= 1
+                                self.logger.log_trade(
+                                    self.currentTime.time(),
+                                    self.bid,
+                                    self.position - last_pos,
+                                    "ADD3_SELL",
+                                )
+                        elif self.currentTime > self.initialTradeTime + timedelta(
+                            seconds=self.check1 * 60
+                        ):
+                            if np.mean(self.entryPrices) < self.latestTradePrice:
+                                self.flatten(self.ask, "PNL2_FLATTEN")
+                            elif self.position > -2:
+                                last_pos = self.position
+                                self.position -= 1
+                                self.logger.log_trade(
+                                    self.currentTime.time(),
+                                    self.bid,
+                                    self.position - last_pos,
+                                    "ADD2_SELL",
+                                )
+
+                    # update our last time
+                    self.lastTime = self.currentTime.replace(second=0, microsecond=0)
+
+                    # start active waiting after 58.5 seconds
+                    time.sleep(58.5)
+
     def warmup(self):
         engine = create_engine(
             "postgresql+psycopg2://tickreader:tickreader@tsdb:5432/cme",
@@ -213,6 +425,9 @@ class TradingClient(NinjaApiClient):
         ## USER INPUT
         threading.Thread(target=self.user_quits, daemon=True).start()
         ##________________________________________________________________________________
+        ## TRADE LOGIC
+        threading.Thread(target=self.trade_logic, daemon=True).start()
+        ##________________________________________________________________________________
         ## LOGIN
         login = NinjaApiMessages_pb2.Login()
         login.user = settings.trading_user
@@ -256,7 +471,8 @@ class TradingClient(NinjaApiClient):
         hb_count = 0
         while self.connected:
             # GET THE CORRECT TIMES
-            self.currentTime = datetime.now()
+            if self.currentTime is None:
+                self.currentTime = datetime.now()
             if (
                 self.marketStart <= self.currentTime.time() <= self.marketEnd
                 and not self.printed
@@ -332,272 +548,6 @@ class TradingClient(NinjaApiClient):
                                     if abs(self.position) != 1:
                                         self.signalFlip = 0
                                     self.flatten(self.loss, "LOSS_FLATTEN")
-
-                            # EVERY TOP OF THE MINUTE...
-                            if self.currentTime > self.lastTime + timedelta(seconds=60):
-                                logging.info(f"Contract: {update.contract.secDesc}")
-                                logging.info(
-                                    f"Bid Qty: {update.tobUpdate.bidQty} | Bid: {update.tobUpdate.bidPrice} | Ask: {update.tobUpdate.askPrice} | Ask Qty: {update.tobUpdate.askQty}"
-                                )
-                                if self.lastPrice is None:
-                                    self.lastPrice = self.latestTradePrice
-                                    logging.info(
-                                        f"Established Latest Price: {self.latestTradePrice}"
-                                    )
-                                else:
-                                    move = self.latestTradePrice - self.lastPrice
-                                    self.add_votes(move, toPrint=self.toPrint)
-                                    self.check_votes_for_final_votes(
-                                        toPrint=self.toPrint
-                                    )
-                                    self.check_signal_from_final_votes(
-                                        toPrint=self.toPrint
-                                    )
-                                    self.lastPrice = self.latestTradePrice
-                                logging.info(f"Latest Price: {self.latestTradePrice}")
-
-                                # DIFFERENT LOGIC BASED ON DIFFERENT POSITIONS
-                                # signal flip, if we have any position, flatten
-                                if (
-                                    self.position * self.signal <= 0
-                                    and self.position != 0
-                                ):
-                                    if self.position > 0:
-                                        self.logger.log_trade(
-                                            self.currentTime.time(),
-                                            self.bid,
-                                            -self.position,
-                                            "EXIT-SIGNAL",
-                                        )
-                                        self.position = 0
-                                    if self.position < 0:
-                                        self.logger.log_trade(
-                                            self.currentTime.time(),
-                                            self.ask,
-                                            -self.position,
-                                            "EXIT-SIGNAL",
-                                        )
-                                        self.position = 0
-
-                                # start trade if position 0 and signalFlip is reset
-                                elif self.position == 0:
-                                    if (
-                                        self.signal == -1
-                                        and self.signalFlip != self.signal
-                                    ):
-                                        self.logger.log_trade(
-                                            self.currentTime.time(),
-                                            self.bid,
-                                            -1,
-                                            "START_SELL",
-                                        )
-                                        self.position = -1
-                                        self.signalFlip = -1
-                                        self.entryPrices = [self.bid]
-                                        self.initialTradeTime = (
-                                            self.currentTime.replace(
-                                                second=0, microsecond=0
-                                            )
-                                        )
-                                        self.gain = self.tickRound(
-                                            self.latestTradePrice * (1 - self.gainLimit)
-                                        )
-                                        self.loss = self.tickRound(
-                                            self.latestTradePrice * (1 + self.lossLimit)
-                                        )
-                                    elif (
-                                        self.signal == 1
-                                        and self.signalFlip != self.signal
-                                    ):
-                                        self.logger.log_trade(
-                                            self.currentTime.time(),
-                                            self.ask,
-                                            1,
-                                            "START_BUY",
-                                        )
-                                        self.position = 1
-                                        self.signalFlip = 1
-                                        self.entryPrices = [self.ask]
-                                        self.initialTradeTime = (
-                                            self.currentTime.replace(
-                                                second=0, microsecond=0
-                                            )
-                                        )
-                                        self.gain = self.tickRound(
-                                            self.latestTradePrice * (1 + self.gainLimit)
-                                        )
-                                        self.loss = self.tickRound(
-                                            self.latestTradePrice * (1 - self.lossLimit)
-                                        )
-
-                                # position is positive, do our adding checks
-                                elif self.position > 0:
-                                    if (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check4 * 60)
-                                    ):
-                                        if (
-                                            np.mean(self.entryPrices)
-                                            > self.latestTradePrice
-                                        ):
-                                            self.signalFlip = 0
-                                            self.flatten(self.bid, "PNL5_FLATTEN")
-                                        elif self.position < 5:
-                                            last_pos = self.position
-                                            self.position += 1
-                                            self.logger.log_trade(
-                                                self.currentTime.time(),
-                                                self.ask,
-                                                self.position - last_pos,
-                                                "ADD5_BUY",
-                                            )
-                                    elif (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check3 * 60)
-                                    ):
-                                        if (
-                                            np.mean(self.entryPrices)
-                                            > self.latestTradePrice
-                                        ):
-                                            self.signalFlip = 0
-                                            self.flatten(self.bid, "PNL4_FLATTEN")
-                                        elif self.position < 4:
-                                            last_pos = self.position
-                                            self.position += 1
-                                            self.logger.log_trade(
-                                                self.currentTime.time(),
-                                                self.ask,
-                                                self.position - last_pos,
-                                                "ADD4_BUY",
-                                            )
-                                    elif (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check2 * 60)
-                                    ):
-                                        if (
-                                            np.mean(self.entryPrices)
-                                            > self.latestTradePrice
-                                        ):
-                                            self.signalFlip = 0
-                                            self.flatten(self.bid, "PNL3_FLATTEN")
-                                        elif self.position < 3:
-                                            last_pos = self.position
-                                            self.position += 1
-                                            self.logger.log_trade(
-                                                self.currentTime.time(),
-                                                self.ask,
-                                                self.position - last_pos,
-                                                "ADD3_BUY",
-                                            )
-                                    elif (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check1 * 60)
-                                    ):
-                                        if (
-                                            np.mean(self.entryPrices)
-                                            > self.latestTradePrice
-                                        ):
-                                            self.flatten(self.bid, "PNL2_FLATTEN")
-                                        elif self.position < 2:
-                                            last_pos = self.position
-                                            self.position += 1
-                                            self.logger.log_trade(
-                                                self.currentTime.time(),
-                                                self.ask,
-                                                self.position - last_pos,
-                                                "ADD2_BUY",
-                                            )
-
-                                # position is negative, do our adding checks
-                                elif self.position < 0:
-                                    if (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check4 * 60)
-                                    ):
-                                        if (
-                                            np.mean(self.entryPrices)
-                                            < self.latestTradePrice
-                                        ):
-                                            self.signalFlip = 0
-                                            self.flatten(self.ask, "PNL5_FLATTEN")
-                                        elif self.position > -5:
-                                            last_pos = self.position
-                                            self.position -= 1
-                                            self.logger.log_trade(
-                                                self.currentTime.time(),
-                                                self.bid,
-                                                self.position - last_pos,
-                                                "ADD5_SELL",
-                                            )
-                                    elif (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check3 * 60)
-                                    ):
-                                        if (
-                                            np.mean(self.entryPrices)
-                                            < self.latestTradePrice
-                                        ):
-                                            self.signalFlip = 0
-                                            self.flatten(self.ask, "PNL4_FLATTEN")
-                                        elif self.position > -4:
-                                            last_pos = self.position
-                                            self.position -= 1
-                                            self.logger.log_trade(
-                                                self.currentTime.time(),
-                                                self.bid,
-                                                self.position - last_pos,
-                                                "ADD4_SELL",
-                                            )
-                                    elif (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check2 * 60)
-                                    ):
-                                        if (
-                                            np.mean(self.entryPrices)
-                                            < self.latestTradePrice
-                                        ):
-                                            self.signalFlip = 0
-                                            self.flatten(self.ask, "PNL3_FLATTEN")
-                                        elif self.position > -3:
-                                            last_pos = self.position
-                                            self.position -= 1
-                                            self.logger.log_trade(
-                                                self.currentTime.time(),
-                                                self.bid,
-                                                self.position - last_pos,
-                                                "ADD3_SELL",
-                                            )
-                                    elif (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check1 * 60)
-                                    ):
-                                        if (
-                                            np.mean(self.entryPrices)
-                                            < self.latestTradePrice
-                                        ):
-                                            self.flatten(self.ask, "PNL2_FLATTEN")
-                                        elif self.position > -2:
-                                            last_pos = self.position
-                                            self.position -= 1
-                                            self.logger.log_trade(
-                                                self.currentTime.time(),
-                                                self.bid,
-                                                self.position - last_pos,
-                                                "ADD2_SELL",
-                                            )
-
-                                # update our last time
-                                self.lastTime = self.currentTime.replace(
-                                    second=0, microsecond=0
-                                )
 
             ##________________________________________________________________________________
             ## PRINT AVAILABLE FIELDS

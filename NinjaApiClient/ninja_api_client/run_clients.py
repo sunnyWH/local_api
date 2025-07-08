@@ -1,7 +1,8 @@
 import logging
 import threading
 
-from trading_client import TradingClient
+# from trading_client import TradingClient
+from trading_client_threading import TradingClient
 from positions_client import PositionsClient
 from config import settings
 
