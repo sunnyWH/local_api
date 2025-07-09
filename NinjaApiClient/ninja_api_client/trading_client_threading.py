@@ -332,7 +332,7 @@ class TradingClient(NinjaApiClient):
         df = df.sort_index()
         times = df.index.time
         mask = (times >= pd.to_datetime("08:30").time()) & (
-            times < pd.to_datetime("17:00").time()
+            times < pd.to_datetime("15:00:03").time()
         )
         df = df[mask].copy()
         df["minute"] = df["sending_time"].dt.floor("min")
@@ -403,7 +403,7 @@ class TradingClient(NinjaApiClient):
                 )
 
     def flatten(self, price, tag):
-        if self.position is not 0:
+        if self.position != 0:
             self.logger.log_trade(
                 self.currentTime.time(),
                 price,
