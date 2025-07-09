@@ -76,12 +76,7 @@ class TradingClient(NinjaApiClient):
                 container.header.msgType = (
                     NinjaApiMessages_pb2.Header.STOP_MARKET_DATA_REQUEST
                 )
-                self.logger.log_trade(
-                    datetime.now().time(),
-                    self.lastPrice,
-                    -self.position,
-                    "PROGRAM_FLATTEN",
-                )
+                self.flatten(self.lastPrice, "PROGRAM_FLATTEN")
                 logging.info("Stopping market connection...")
                 container.payload = stopmd.SerializeToString()
                 self.send_msg(container)
@@ -130,6 +125,9 @@ class TradingClient(NinjaApiClient):
         df = df.drop(columns=["sending_time", "minute"])
         df["t_price"] = df["t_price"] / self.productDiv
         moves = df["t_price"].diff()
+        time_diff = moves.index.to_series().diff()
+        moves[time_diff > pd.Timedelta(minutes=2)] = 0
+        moves.dropna(inplace=True)
         for move in moves:
             self.add_votes(move, toPrint=self.toPrint)
             self.check_votes_for_final_votes(toPrint=self.toPrint)
