@@ -26,7 +26,9 @@ class NinjaApiClient(ABC):
             self.sock.connect((self.host, self.port))
             self.sock.setblocking(False)
         except:
-            logging.exception(f"Failed to connect Ninja API endpoint at {self.host}:{self.port}")
+            logging.exception(
+                f"Failed to connect Ninja API endpoint at {self.host}:{self.port}"
+            )
             return
         self.connected = True
         self.hb_thread = threading.Thread(target=self.send_heartbeats)
@@ -89,14 +91,14 @@ class NinjaApiClient(ABC):
         container = NinjaApiMessages_pb2.MsgContainer()
         container.header.msgType = NinjaApiMessages_pb2.Header.HEARTBEAT
         last_send_time = time.time()
-        sleep_time = 0.001 # 1 millisecond
+        sleep_time = 0.001  # 1 millisecond
         while self.connected:
             while (time.time() - last_send_time) + sleep_time < 5:
                 if not self.connected:
                     return
                 else:
                     time.sleep(sleep_time)
-            logging.info("Sending HEARTBEAT")
+            # logging.info("Sending HEARTBEAT")
             self.send_msg(container)
             last_send_time = time.time()
 

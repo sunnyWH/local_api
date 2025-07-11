@@ -41,6 +41,7 @@ class TradingClient(NinjaApiClient):
         self.gainLimit = 0.015
         self.lossLimit = 0.0035
         self.marketStart = datetimeTime(8, 30)
+        self.preMarketStart = datetimeTime(8, 29)
         self.marketEnd = datetimeTime(14, 59)
         self.logger = TradingLogger()
         self.toPrint = True
@@ -86,10 +87,41 @@ class TradingClient(NinjaApiClient):
 
     def trade_logic(self):
         while True:
+            # GET THE CORRECT TIMES
+            self.currentTime = datetime.now()
+            if not self.inMarket:
+                if (
+                    self.lastTime is None
+                    and self.preMarketStart <= self.currentTime.time()
+                ):
+                    self.lastTime = self.currentTime.replace(second=0, microsecond=0)
+                if (
+                    self.marketStart <= self.currentTime.time() <= self.marketEnd
+                    and not self.printed
+                ):
+                    logging.info(f"In Market Hours")
+                    self.printed = True
+                    self.printedClosed = False
+                    self.inMarket = True
+
             while self.inMarket:
-                # EVERY TOP OF THE MINUTE...
                 self.currentTime = datetime.now()
-                if self.currentTime > self.lastTime + timedelta(seconds=60):
+                if self.lastTime is None:
+                    self.lastTime = self.currentTime.replace(second=0, microsecond=0)
+                    
+                if (
+                    not self.marketStart <= self.currentTime.time() <= self.marketEnd
+                    and not self.printedClosed
+                ):
+                    logging.info(f"Outside of Market Hours, flattening...")
+                    self.flatten(self.latestTradePrice, "MARKET_FLATTEN")
+                    self.signalFlip = 0
+                    self.printed = False
+                    self.printedClosed = True
+                    self.inMarket = False
+
+                # EVERY TOP OF THE MINUTE...
+                elif self.currentTime > self.lastTime + timedelta(seconds=60):
                     logging.info(f"Contract: {self.product}")
                     logging.info(f"Bid: {self.bid} | Ask: {self.ask}")
                     if self.lastPrice is None:
@@ -377,9 +409,14 @@ class TradingClient(NinjaApiClient):
             for i in np.arange(abs(to_add)):
                 self.votes.append(-1)
         self.voteTotal = sum(self.votes)
+        percent_to_show = 0.5 + (self.voteTotal / (2 * self.voteCount))
+        if percent_to_show < 0.5:
+            percent_to_show = -1 * (1 - percent_to_show)
+        percent_to_show = 100 * percent_to_show
+        percent_to_show = round(percent_to_show, 1)
         if toPrint:
             logging.info(
-                f"Change: {move}, Votes: {to_add}, Total Vote: {self.voteTotal}"
+                f"Change: {move}, Votes: {to_add}, Total Vote: {percent_to_show}%"
             )
 
     def check_votes_for_final_votes(self, toPrint=False):
@@ -489,32 +526,6 @@ class TradingClient(NinjaApiClient):
 
         hb_count = 0
         while self.connected:
-            # GET THE CORRECT TIMES
-            if self.currentTime is None or not self.inMarket:
-                self.currentTime = datetime.now()
-            if (
-                self.marketStart <= self.currentTime.time() <= self.marketEnd
-                and not self.printed
-            ):
-                logging.info(f"In Market Hours")
-                self.printed = True
-                self.printedClosed = False
-                self.inMarket = True
-            if (
-                not self.marketStart <= self.currentTime.time() <= self.marketEnd
-                and not self.printedClosed
-            ):
-                logging.info(f"Outside of Market Hours, flattening...")
-                self.flatten(self.latestTradePrice, "MARKET_FLATTEN")
-                self.signalFlip = 0
-                self.printed = False
-                self.printedClosed = True
-                self.inMarket = False
-
-            if self.inMarket:
-                if self.lastTime is None:
-                    self.lastTime = self.currentTime.replace(second=0, microsecond=0)
-
             msg = self.recv_msg()
             if not msg:
                 continue
