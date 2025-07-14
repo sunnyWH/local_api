@@ -63,7 +63,7 @@ class TradingClient(NinjaApiClient):
         self.currentTime = None
         self.inMarket = None
         self.position = 0
-        self.entryPrices = None
+        self.entryPrices = []
         self.initialTradeTime = None
         self.gain = None
         self.loss = None
@@ -108,7 +108,7 @@ class TradingClient(NinjaApiClient):
                 self.currentTime = datetime.now()
                 if self.lastTime is None:
                     self.lastTime = self.currentTime.replace(second=0, microsecond=0)
-                    
+
                 if (
                     not self.marketStart <= self.currentTime.time() <= self.marketEnd
                     and not self.printedClosed
@@ -217,6 +217,7 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD5_BUY",
                                     )
+                                    self.entryPrices.append(self.ask)
                         elif self.currentTime > self.initialTradeTime + timedelta(
                             seconds=self.check3 * 60
                         ):
@@ -234,6 +235,7 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD4_BUY",
                                     )
+                                    self.entryPrices.append(self.ask)
                         elif self.currentTime > self.initialTradeTime + timedelta(
                             seconds=self.check2 * 60
                         ):
@@ -251,6 +253,7 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD3_BUY",
                                     )
+                                    self.entryPrices.append(self.ask)
                         elif self.currentTime > self.initialTradeTime + timedelta(
                             seconds=self.check1 * 60
                         ):
@@ -267,6 +270,7 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD2_BUY",
                                     )
+                                    self.entryPrices.append(self.ask)
 
                     # position is negative, do our adding checks
                     elif self.position < 0:
@@ -287,6 +291,7 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD5_SELL",
                                     )
+                                    self.entryPrices.append(self.bid)
                         elif self.currentTime > self.initialTradeTime + timedelta(
                             seconds=self.check3 * 60
                         ):
@@ -304,6 +309,7 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD4_SELL",
                                     )
+                                    self.entryPrices.append(self.bid)
                         elif self.currentTime > self.initialTradeTime + timedelta(
                             seconds=self.check2 * 60
                         ):
@@ -321,6 +327,7 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD3_SELL",
                                     )
+                                    self.entryPrices.append(self.bid)
                         elif self.currentTime > self.initialTradeTime + timedelta(
                             seconds=self.check1 * 60
                         ):
@@ -337,6 +344,7 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD2_SELL",
                                     )
+                                    self.entryPrices.append(self.bid)
 
                     # update our last time
                     self.lastTime = self.currentTime.replace(second=0, microsecond=0)
@@ -467,6 +475,7 @@ class TradingClient(NinjaApiClient):
         self.initialTradeTime = None
         self.gain = None
         self.loss = None
+        self.entryPrices = []
         self.pnlCheckCounter = 0
         self.position = 0
 
