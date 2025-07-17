@@ -1,0 +1,72 @@
+syntax = "proto3";
+package NinjaApiMessages;
+
+import "NinjaApiCommon.proto";
+
+message Contract {
+  Exchange exchange = 1;
+  string secDesc = 2;
+  string whName = 3;
+}
+
+message Contracts {
+  repeated Contract contracts = 1;
+}
+
+message GetContractInfo {
+  repeated Contract contracts = 1;
+}
+
+message ContractLegInfo {
+  Side side = 1;
+  int32 ratio = 2;
+  Contract contract = 3;
+}
+
+message ContractInfo {
+  enum ContractType {
+    FUTURE = 0;
+    OPTION = 1;
+    BOND = 2;
+  }
+
+  enum OptionType {
+    PUT = 0;
+    CALL = 1;
+  }
+
+  Contract contract = 1;
+  string secGroup = 2;
+  string cfiCode = 3;
+  ContractType contractType = 4;
+  OptionType optionType = 5;
+  Date lastTradeDate = 6;
+  double strike = 7;
+  double tickSize = 8;
+  double tickAmt = 9;
+  string currency = 10;
+  double highLimitPrice = 11;
+  double lowLimitPrice = 12;
+  Contract underlying = 13;
+  repeated ContractLegInfo legs = 14;
+}
+
+message ContractInfoList {
+  repeated ContractInfo contractInfoList = 1;
+}
+
+message GetSettlements {
+  repeated Contract contracts = 1;
+}
+
+message Settlement {
+  Contract contract = 1;
+  Date date = 2;
+  optional double prelim = 3;
+  optional double final = 4;
+}
+
+message Settlements {
+  repeated Settlement settlements = 1;
+}
+

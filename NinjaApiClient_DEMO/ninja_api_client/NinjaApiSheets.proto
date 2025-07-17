@@ -1,0 +1,57 @@
+syntax = "proto3";
+package NinjaApiMessages;
+
+import "NinjaApiContracts.proto";
+
+message GetSheets {
+  enum SheetType {
+    FUTURE_SHEETS = 0;
+  }
+
+  SheetType type = 1;
+}
+
+message Sheet {
+  string name = 1;
+  string account = 2;
+  repeated Contract contracts = 3;
+}
+
+message Sheets {
+  repeated Sheet sheets = 1;
+}
+
+message GetSheetRisk {
+  repeated string sheets = 1;
+}
+
+message SheetRisk {
+  string sheet = 1;
+  uint32 clipSize = 2;
+  uint32 ordersSent = 3;
+  uint32 maxOrders = 4;
+}
+
+message SheetRiskList {
+  repeated SheetRisk riskForSheets = 1;
+}
+
+message GetSheetStates {
+  repeated string sheets = 1;
+}
+
+message SheetState {
+  enum Status {
+    DISABLED = 0;
+    OFF = 1;
+    ON = 2;
+  }
+
+  string sheet = 1;
+  Status status = 2;
+}
+
+message SheetStates {
+  repeated SheetState sheetStates = 1;
+}
+

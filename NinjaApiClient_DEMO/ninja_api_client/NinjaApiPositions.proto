@@ -1,0 +1,25 @@
+syntax = "proto3";
+package NinjaApiMessages;
+
+import "NinjaApiCommon.proto";
+import "NinjaApiContracts.proto";
+
+message GetPositions {
+  repeated string accounts = 1;
+  repeated Contract filters = 2;
+  bool includeSpec = 3; // toggle to include speculative positions
+}
+
+message Position {
+  string account = 1;
+  Contract contract = 2;
+  Date tradeDate = 3;
+  int32 dailyPos = 4;
+  int32 openPos = 5;
+  int32 totalPos = 6;
+}
+
+message Positions {
+  repeated Position positions = 1;
+}
+

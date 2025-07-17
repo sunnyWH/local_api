@@ -1,0 +1,43 @@
+syntax = "proto3";
+package NinjaApiMessages;
+
+message WorkingRule {
+  enum WorkType {
+    LIMIT = 0;
+    WORK_STOP = 1;
+    STOP_LIMIT = 2;
+    HBLA_RETIRED = 3;
+    OTHER_MONTH = 4;
+    CASCADE = 5;
+    SIZE_CUTOFF = 6;
+    STERL_HBLA = 7;
+    BOR_HBLA = 8;
+    LEAD_MONTH = 9;
+    LEG_SPLIT = 10;
+    FADE_STOP_LIMIT = 11;
+    FADE_SIZE_CUTOFF = 12;
+    FADE_LIMIT = 13;
+    SCO_SPREAD = 14;
+    BEST_MONTH = 15;
+    SMART_SPLIT = 16;
+    OUTRIGHT_SMART_SPLIT = 17;
+    SCO_MINI = 18;
+    OPTION_SCRATCH = 19;
+    DYNAMIC = 20;
+    STOP_PRICE = 21;
+    SOFR_HBLA = 22;
+    DYNAMIC_HEDGE_OFFSET = 23;
+    EAGLE = 24;
+    PARTIAL = 25;
+    AGRO_EE = 26;
+    AGRO_PLUS_ONE = 27;
+  }
+
+  string prefix = 1;
+  WorkType workType = 2;
+}
+
+message WorkingRules {
+  repeated WorkingRule workingRules = 1;
+}
+

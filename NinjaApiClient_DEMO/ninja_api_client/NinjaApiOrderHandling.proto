@@ -1,0 +1,172 @@
+syntax = "proto3";
+package NinjaApiMessages;
+
+import "NinjaApiCommon.proto";
+import "NinjaApiContracts.proto";
+import "NinjaApiMessages.proto";
+
+message TimeInForce {
+  enum Type {
+    UNKNOWN = 0;
+    DAY = 1;
+    GTC = 2;
+    IOC = 3;
+  }
+
+  Type type = 1;
+}
+
+message OrderAdd {
+  string sheet = 1;
+  string account = 2;
+  Contract contract = 3;
+  TimeInForce timeInForce = 4;
+  Side side = 5;
+  uint32 qty = 6;
+  double price = 7;
+  string prefix = 8;
+}
+
+message OrderAddFailure {
+  string reason = 1;
+  Error.Type errorCode = 2;
+  string orderNo = 3;
+  Contract contract = 4;
+  TimeInForce timeInForce = 5;
+  Side side = 6;
+  uint32 qty = 7;
+  double price = 8;
+  string prefix = 9;
+  string sheet = 10;
+  string account = 11;
+}
+
+message OrderAddEvent {
+  string orderNo = 1;
+  string triggerOrderNo = 2;
+  Contract contract = 3;
+  TimeInForce timeInForce = 4;
+  Side side = 5;
+  uint32 qty = 6;
+  double price = 7;
+  string prefix = 8;
+  string sheet = 9;
+  string account = 10;
+}
+
+message OrderChange {
+  string orderNo = 1;
+  uint32 qty = 2;
+  double price = 3;
+  string prefix = 4;
+}
+
+message OrderChangeFailure {
+  string reason = 1;
+  Error.Type errorCode = 2;
+  string orderNo = 3;
+  Contract contract = 4;
+  Side side = 5;
+  uint32 qty = 6;
+  double price = 7;
+  string prefix = 8;
+  string sheet = 9;
+  string account = 10;
+}
+
+message OrderChangeEvent {
+  string orderNo = 1;
+  Contract contract = 2;
+  Side side = 3;
+  uint32 qty = 4;
+  double price = 5;
+  string prefix = 6;
+  string channel = 7;
+  uint32 sqn = 8;
+  string sheet = 9;
+  string account = 10;
+}
+
+message OrderCancel {
+  string orderNo = 1;
+}
+
+message OrderCancelFailure {
+  string reason = 1;
+  Error.Type errorCode = 2;
+  string orderNo = 3;
+  Contract contract = 4;
+  string sheet = 5;
+  string account = 6;
+}
+
+message OrderCancelEvent {
+  string orderNo = 1;
+  Contract contract = 2;
+  string reason = 3;
+  string sheet = 4;
+  string account = 5;
+}
+
+message OrderRejectEvent {
+  enum Action {
+    ADD = 0;
+    CHANGE = 1;
+    CANCEL = 2;
+  }
+
+  string orderNo = 1;
+  Contract contract = 2;
+  Action action = 3;
+  string reason = 4;
+  string sheet = 5;
+  string account = 6;
+}
+
+message CancelAllOrders {
+  bool cancelGTCs = 1;
+}
+
+message MassCancelEvent {
+  repeated OrderCancelEvent canceledOrders = 1;
+}
+
+message FillNotice {
+  string orderNo = 1;
+  bool isApiOrder = 2;
+  Contract contract = 3;
+  double price = 4;
+  Side side = 5;
+  uint32 qty = 6;
+  bool isPartialFill = 7;
+  EpochNanoseconds transactTime = 8;
+  Aggressor aggressor = 9;
+  MarketTradeType marketTradeType = 10;
+  bool tradeAffectsVolume = 11;
+  string sheet = 12;
+  string account = 13;
+  bool isQuote = 14;
+  string strategyGroup = 15;
+  string strategy = 16;
+  repeated FillNotice legFills = 17;
+}
+
+message GetActiveOrders {
+  bool showOnlyApiOrders = 1;
+  repeated Contract filters = 2;
+}
+
+message ActiveOrder {
+  string orderNo = 1;
+  Contract contract = 2;
+  Side side = 3;
+  uint32 qty = 4;
+  double price = 5;
+  string prefix = 6;
+  string sheet = 7;
+  string account = 8;
+}
+
+message ActiveOrders {
+  repeated ActiveOrder activeOrders = 1;
+}

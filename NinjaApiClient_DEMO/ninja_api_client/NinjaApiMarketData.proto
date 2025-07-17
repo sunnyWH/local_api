@@ -1,0 +1,94 @@
+syntax = "proto3";
+package NinjaApiMessages;
+
+import "NinjaApiCommon.proto";
+import "NinjaApiContracts.proto";
+
+message PriceFeedStatus {
+  enum Status {
+    DOWN = 0;
+    UP = 1;
+  }
+
+  Status status = 1;
+}
+
+message GetSecurityStatuses {
+  repeated Contract contracts = 1;
+}
+
+message SecurityStatus {
+  enum Status {
+    UNKNOWN = 0;
+    TRADING_HALT = 1;
+    CLOSE_SCHEDULED = 2;
+    CLOSE_MKT_EVENT = 3;
+    OPEN_SCHEDULED = 4;
+    OPEN_MKT_EVENT = 5;
+    UNAVAILABLE = 6;
+    PRE_OPEN_SCHEDULED = 7;
+    PRE_OPEN_MKT_EVENT = 8;
+    PRE_OPEN_NO_CANCEL = 9;
+    NEW_PRICE_INDICATION = 10;
+    PRE_CROSS = 11;
+    CROSS = 12;
+    PRE_CLOSE = 13;
+    CLOSE = 14;
+    POST_CLOSE = 15;
+    IMPLIEDS_OFF_SCHEDULED = 16;
+    IMPLIEDS_OFF_MKT_EVENT = 17;
+    IMPLIEDS_ON_SCHEDULED = 18;
+    IMPLIEDS_ON_MKT_EVENT = 19;
+    TECHNICAL_HALT = 20;
+  }
+
+  Contract contract = 1;
+  Status status = 2;
+}
+
+message SecurityStatuses {
+  repeated SecurityStatus statuses = 1;
+}
+
+message StartMarketData {
+  repeated Contract contracts = 1;
+  DurationMilliseconds cadence = 2;
+  bool includeImplieds = 3;
+  bool includeTradeUpdates = 4;
+}
+
+message TobUpdate {
+  uint32 bidOrders = 1;
+  uint32 askOrders = 2;
+  uint32 bidQty = 3;
+  uint32 askQty = 4;
+  double bidPrice = 5; 
+  double askPrice = 6;
+  EpochNanoseconds lastChange = 7;
+}
+
+message TradeUpdate {
+  uint32 tradeQty = 1;
+  double tradePrice = 2;
+  EpochNanoseconds transactTime = 3;
+  Aggressor aggressor = 4;
+  MarketTradeType marketTradeType = 5;
+  bool tradeAffectsVolume = 6;
+  bool isLeg = 7;
+  uint32 sqn = 8;
+}
+
+message MarketUpdate {
+  Contract contract = 1;
+  TobUpdate tobUpdate = 2;
+  repeated TradeUpdate tradeUpdates = 3;
+}
+
+message MarketUpdates {
+  repeated MarketUpdate marketUpdates = 1;
+}
+
+message StopMarketData {
+  repeated Contract contracts = 1;
+}
+
