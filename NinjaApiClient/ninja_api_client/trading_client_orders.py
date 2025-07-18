@@ -73,18 +73,18 @@ class TradingClient(NinjaApiClient):
 
     def user_quits(self):
         while True:
-            if input("Type 'q' to quit: ").strip().lower() == "q":
+            if input().strip().lower() == "q":
                 logging.info("Quit signal received.")
                 container = NinjaApiMessages_pb2.MsgContainer()
                 stopmd = NinjaApiMarketData_pb2.StopMarketData()
                 container.header.msgType = (
                     NinjaApiMessages_pb2.Header.STOP_MARKET_DATA_REQUEST
                 )
-                self.flatten(self.lastPrice, "PROGRAM_FLATTEN")
+                self.flatten(self.latestTradePrice, "PROGRAM_FLATTEN")
                 logging.info("Stopping market connection...")
                 container.payload = stopmd.SerializeToString()
                 self.send_msg(container)
-                logging.info("Disconnecting...")
+                logging.info("TRADING_CLIENT: Disconnecting...")
                 self.disconnect()
 
     def trade_logic(self):
@@ -143,23 +143,9 @@ class TradingClient(NinjaApiClient):
                     # signal flip, if we have any position, flatten
                     if self.position * self.signal <= 0 and self.position != 0:
                         if self.position > 0:
-                            self.order(self.bid, -self.position)
-                            self.logger.log_trade(
-                                self.currentTime.time(),
-                                self.bid,
-                                -self.position,
-                                "EXIT-SIGNAL",
-                            )
-                            self.position = 0
+                            self.flatten(self.bid, "SIGNAL_FLATTEN")
                         if self.position < 0:
-                            self.order(self.ask, -self.position)
-                            self.logger.log_trade(
-                                self.currentTime.time(),
-                                self.ask,
-                                -self.position,
-                                "EXIT-SIGNAL",
-                            )
-                            self.position = 0
+                            self.flatten(self.ask, "SIGNAL_FLATTEN")
 
                     # start trade if position 0 and signalFlip is reset
                     elif self.position == 0:
@@ -211,6 +197,9 @@ class TradingClient(NinjaApiClient):
                         ):
                             self.pnlCheckCounter = 5
                             if self.pnlCheckCounter != self.position:
+                                logging.info(
+                                    f"Entry Prices: {self.entryPrices}, Latest: {self.latestTradePrice}"
+                                )
                                 if np.mean(self.entryPrices) > self.latestTradePrice:
                                     self.signalFlip = 0
                                     self.flatten(self.bid, "PNL5_FLATTEN")
@@ -224,12 +213,15 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD5_BUY",
                                     )
-                                    self.entryPrices.append(self.ask)
+                                    self.entryPrices.append(self.latestTradePrice)
                         elif self.currentTime > self.initialTradeTime + timedelta(
                             seconds=self.check3 * 60
                         ):
                             self.pnlCheckCounter = 4
                             if self.pnlCheckCounter != self.position:
+                                logging.info(
+                                    f"Entry Prices: {self.entryPrices}, Latest: {self.latestTradePrice}"
+                                )
                                 if np.mean(self.entryPrices) > self.latestTradePrice:
                                     self.signalFlip = 0
                                     self.flatten(self.bid, "PNL4_FLATTEN")
@@ -243,12 +235,15 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD4_BUY",
                                     )
-                                    self.entryPrices.append(self.ask)
+                                    self.entryPrices.append(self.latestTradePrice)
                         elif self.currentTime > self.initialTradeTime + timedelta(
                             seconds=self.check2 * 60
                         ):
                             self.pnlCheckCounter = 3
                             if self.pnlCheckCounter != self.position:
+                                logging.info(
+                                    f"Entry Prices: {self.entryPrices}, Latest: {self.latestTradePrice}"
+                                )
                                 if np.mean(self.entryPrices) > self.latestTradePrice:
                                     self.signalFlip = 0
                                     self.flatten(self.bid, "PNL3_FLATTEN")
@@ -262,12 +257,15 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD3_BUY",
                                     )
-                                    self.entryPrices.append(self.ask)
+                                    self.entryPrices.append(self.latestTradePrice)
                         elif self.currentTime > self.initialTradeTime + timedelta(
                             seconds=self.check1 * 60
                         ):
                             self.pnlCheckCounter = 2
                             if self.pnlCheckCounter != self.position:
+                                logging.info(
+                                    f"Entry Prices: {self.entryPrices}, Latest: {self.latestTradePrice}"
+                                )
                                 if np.mean(self.entryPrices) > self.latestTradePrice:
                                     self.flatten(self.bid, "PNL2_FLATTEN")
                                 elif self.position < 2:
@@ -280,7 +278,7 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD2_BUY",
                                     )
-                                    self.entryPrices.append(self.ask)
+                                    self.entryPrices.append(self.latestTradePrice)
 
                     # position is negative, do our adding checks
                     elif self.position < 0:
@@ -289,6 +287,9 @@ class TradingClient(NinjaApiClient):
                         ):
                             self.pnlCheckCounter = -5
                             if self.pnlCheckCounter != self.position:
+                                logging.info(
+                                    f"Entry Prices: {self.entryPrices}, Latest: {self.latestTradePrice}"
+                                )
                                 if np.mean(self.entryPrices) < self.latestTradePrice:
                                     self.signalFlip = 0
                                     self.flatten(self.ask, "PNL5_FLATTEN")
@@ -302,12 +303,15 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD5_SELL",
                                     )
-                                    self.entryPrices.append(self.bid)
+                                    self.entryPrices.append(self.latestTradePrice)
                         elif self.currentTime > self.initialTradeTime + timedelta(
                             seconds=self.check3 * 60
                         ):
                             self.pnlCheckCounter = -4
                             if self.pnlCheckCounter != self.position:
+                                logging.info(
+                                    f"Entry Prices: {self.entryPrices}, Latest: {self.latestTradePrice}"
+                                )
                                 if np.mean(self.entryPrices) < self.latestTradePrice:
                                     self.signalFlip = 0
                                     self.flatten(self.ask, "PNL4_FLATTEN")
@@ -321,12 +325,15 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD4_SELL",
                                     )
-                                    self.entryPrices.append(self.bid)
+                                    self.entryPrices.append(self.latestTradePrice)
                         elif self.currentTime > self.initialTradeTime + timedelta(
                             seconds=self.check2 * 60
                         ):
                             self.pnlCheckCounter = -3
                             if self.pnlCheckCounter != self.position:
+                                logging.info(
+                                    f"Entry Prices: {self.entryPrices}, Latest: {self.latestTradePrice}"
+                                )
                                 if np.mean(self.entryPrices) < self.latestTradePrice:
                                     self.signalFlip = 0
                                     self.flatten(self.ask, "PNL3_FLATTEN")
@@ -340,12 +347,15 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD3_SELL",
                                     )
-                                    self.entryPrices.append(self.bid)
+                                    self.entryPrices.append(self.latestTradePrice)
                         elif self.currentTime > self.initialTradeTime + timedelta(
                             seconds=self.check1 * 60
                         ):
                             self.pnlCheckCounter = -2
                             if self.pnlCheckCounter != self.position:
+                                logging.info(
+                                    f"Entry Prices: {self.entryPrices}, Latest: {self.latestTradePrice}"
+                                )
                                 if np.mean(self.entryPrices) < self.latestTradePrice:
                                     self.flatten(self.ask, "PNL2_FLATTEN")
                                 elif self.position > -2:
@@ -358,7 +368,7 @@ class TradingClient(NinjaApiClient):
                                         self.position - last_pos,
                                         "ADD2_SELL",
                                     )
-                                    self.entryPrices.append(self.bid)
+                                    self.entryPrices.append(self.latestTradePrice)
 
                     # update our last time
                     self.lastTime = self.currentTime.replace(second=0, microsecond=0)
@@ -415,6 +425,7 @@ class TradingClient(NinjaApiClient):
             self.add_votes(move, toPrint=self.toPrint)
             self.check_votes_for_final_votes(toPrint=self.toPrint)
             self.check_signal_from_final_votes(toPrint=self.toPrint)
+        logging.info("TYPE 'q' TWICE TO QUIT PROGRAM")
 
     def add_votes(self, move, toPrint=False):
         if not isinstance(move, (int, float)):
@@ -489,7 +500,7 @@ class TradingClient(NinjaApiClient):
         else:
             orderadd.side = NinjaApiCommon_pb2.Side.BUY
         orderadd.qty = abs(qty)
-        orderadd.price = price
+        orderadd.price = price * self.productDiv
         orderadd.prefix = worker
         container.header.msgType = NinjaApiMessages_pb2.Header.ORDER_ADD_REQUEST
         container.payload = orderadd.SerializeToString()
@@ -777,6 +788,15 @@ class TradingClient(NinjaApiClient):
                     logging.info(
                         f"Security status for {secStatus.contract.secDesc} is {NinjaApiMarketData_pb2.SecurityStatus.Status.Name(secStatus.status)}"
                     )
+            elif msg.header.msgType == NinjaApiMessages_pb2.Header.ORDER_ADD_FAILURE:
+                resp = NinjaApiOrderHandling_pb2.OrderAddFailure()
+                resp.ParseFromString(msg.payload)
+                logging.info(
+                    f"Received order add failure for {resp.contract.secDesc} "
+                    f"with order number ({resp.orderNo}). "
+                    f"Error code: {resp.errorCode}. "
+                    f'Reason: ("{resp.reason}").'
+                )
             time.sleep(0.01)
 
         self.disconnect()

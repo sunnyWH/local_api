@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x16NinjaApiMessages.proto\x12\x10NinjaApiMessages\"\xad\t\n\x06Header\x12\x31\n\x07msgType\x18\x01 \x01(\x0e\x32 .NinjaApiMessages.Header.MsgType\x12\x0f\n\x07version\x18\x02 \x01(\t\"\xde\x08\n\x07MsgType\x12\t\n\x05\x45RROR\x10\x00\x12\r\n\tHEARTBEAT\x10\x01\x12\x11\n\rLOGIN_REQUEST\x10\x02\x12\x12\n\x0eLOGIN_RESPONSE\x10\x03\x12\x11\n\rNINJA_REQUEST\x10\x04\x12\x12\n\x0eNINJA_RESPONSE\x10\x05\x12\x14\n\x10\x41\x43\x43OUNTS_REQUEST\x10\x06\x12\x15\n\x11\x41\x43\x43OUNTS_RESPONSE\x10\x07\x12\x12\n\x0eSHEETS_REQUEST\x10\x08\x12\x13\n\x0fSHEETS_RESPONSE\x10\t\x12\x16\n\x12SHEET_RISK_REQUEST\x10\n\x12\x17\n\x13SHEET_RISK_RESPONSE\x10\x0b\x12\x17\n\x13SHEET_STATE_REQUEST\x10\x0c\x12\x18\n\x14SHEET_STATE_RESPONSE\x10\r\x12\x15\n\x11\x43ONTRACTS_REQUEST\x10\x0e\x12\x16\n\x12\x43ONTRACTS_RESPONSE\x10\x0f\x12\x19\n\x15\x43ONTRACT_INFO_REQUEST\x10\x10\x12\x1a\n\x16\x43ONTRACT_INFO_RESPONSE\x10\x11\x12\x17\n\x13SETTLEMENTS_REQUEST\x10\x12\x12\x18\n\x14SETTLEMENTS_RESPONSE\x10\x13\x12\x1d\n\x19PRICE_FEED_STATUS_REQUEST\x10\x14\x12\x1e\n\x1aPRICE_FEED_STATUS_RESPONSE\x10\x15\x12\x1d\n\x19SECURITY_STATUSES_REQUEST\x10\x16\x12\x1e\n\x1aSECURITY_STATUSES_RESPONSE\x10\x17\x12\x1d\n\x19START_MARKET_DATA_REQUEST\x10\x18\x12\x12\n\x0eMARKET_UPDATES\x10\x19\x12\x1c\n\x18STOP_MARKET_DATA_REQUEST\x10\x1a\x12\x19\n\x15WORKING_RULES_REQUEST\x10\x1b\x12\x1a\n\x16WORKING_RULES_RESPONSE\x10\x1c\x12\x15\n\x11POSITIONS_REQUEST\x10\x1d\x12\x16\n\x12POSITIONS_RESPONSE\x10\x1e\x12\x15\n\x11ORDER_ADD_REQUEST\x10\x1f\x12\x16\n\x12ORDER_ADD_RESPONSE\x10 \x12\x13\n\x0fORDER_ADD_EVENT\x10!\x12\x18\n\x14ORDER_CHANGE_REQUEST\x10\"\x12\x19\n\x15ORDER_CHANGE_RESPONSE\x10#\x12\x16\n\x12ORDER_CHANGE_EVENT\x10$\x12\x18\n\x14ORDER_CANCEL_REQUEST\x10%\x12\x19\n\x15ORDER_CANCEL_RESPONSE\x10&\x12\x16\n\x12ORDER_CANCEL_EVENT\x10\'\x12\x1d\n\x19\x43\x41NCEL_ALL_ORDERS_REQUEST\x10(\x12\x1e\n\x1a\x43\x41NCEL_ALL_ORDERS_RESPONSE\x10)\x12\x0f\n\x0b\x46ILL_NOTICE\x10*\x12\x19\n\x15\x41\x43TIVE_ORDERS_REQUEST\x10+\x12\x1a\n\x16\x41\x43TIVE_ORDERS_RESPONSE\x10,\"I\n\x0cMsgContainer\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.NinjaApiMessages.Header\x12\x0f\n\x07payload\x18\x02 \x01(\x0c\"\xe1\x05\n\x05\x45rror\x12*\n\x04type\x18\x01 \x01(\x0e\x32\x1c.NinjaApiMessages.Error.Type\x12\x0b\n\x03msg\x18\x02 \x01(\t\"\x9e\x05\n\x04Type\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x12\n\x0e\x41UTHENTICATION\x10\x01\x12\x11\n\rAUTHORIZATION\x10\x02\x12\x11\n\rNOT_LOGGED_IN\x10\x03\x12\x11\n\rRECEIVE_ERROR\x10\x04\x12\x17\n\x13UNSUPPORTED_MESSAGE\x10\x05\x12\x13\n\x0fINVALID_MESSAGE\x10\x06\x12\x13\n\x0fINVALID_VERSION\x10\x07\x12\x17\n\x13\x43ONNECTION_INACTIVE\x10\x08\x12\x1b\n\x17LOGIN_REQUEST_MALFORMED\x10\t\x12\x1b\n\x17NINJA_REQUEST_MALFORMED\x10\n\x12\x1c\n\x18SHEETS_REQUEST_MALFORMED\x10\x0b\x12 \n\x1cSHEET_RISK_REQUEST_MALFORMED\x10\x0c\x12!\n\x1dSHEET_STATE_REQUEST_MALFORMED\x10\r\x12\x1f\n\x1b\x43ONTRACTS_REQUEST_MALFORMED\x10\x0e\x12#\n\x1f\x43ONTRACT_INFO_REQUEST_MALFORMED\x10\x0f\x12!\n\x1dSETTLEMENTS_REQUEST_MALFORMED\x10\x10\x12\'\n#SECURITY_STATUSES_REQUEST_MALFORMED\x10\x11\x12\'\n#START_MARKET_DATA_REQUEST_MALFORMED\x10\x12\x12&\n\"STOP_MARKET_DATA_REQUEST_MALFORMED\x10\x13\x12#\n\x1fWORKING_RULES_REQUEST_MALFORMED\x10\x14\x12\x1e\n\x1aPOSITION_REQUEST_MALFORMED\x10\x15\x12\x17\n\x13RATE_LIMIT_EXCEEDED\x10\x16\"v\n\x05Login\x12\x0c\n\x04user\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x38\n\x0e\x63onnectionType\x18\x03 \x01(\x0e\x32 .NinjaApiMessages.ConnectionType\x12\x13\n\x0b\x61\x63\x63\x65ssToken\x18\x04 \x01(\t\"j\n\rLoginResponse\x12\x38\n\x0e\x63onnectionType\x18\x01 \x01(\x0e\x32 .NinjaApiMessages.ConnectionType\x12\r\n\x05ninja\x18\x02 \x01(\t\x12\x10\n\x08\x61\x63\x63ounts\x18\x03 \x03(\t\"\x19\n\tNinjaInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x1c\n\x08\x41\x63\x63ounts\x12\x10\n\x08\x61\x63\x63ounts\x18\x01 \x03(\t*]\n\x0e\x43onnectionType\x12\x16\n\x12TRADING_CONNECTION\x10\x00\x12\x17\n\x13POSITION_CONNECTION\x10\x01\x12\x1a\n\x16MARKET_DATA_CONNECTION\x10\x02\x62\x06proto3'
+  serialized_pb=b'\n\x16NinjaApiMessages.proto\x12\x10NinjaApiMessages\"\xb9\t\n\x06Header\x12\x31\n\x07msgType\x18\x01 \x01(\x0e\x32 .NinjaApiMessages.Header.MsgType\x12\x0f\n\x07version\x18\x02 \x01(\t\"\xea\x08\n\x07MsgType\x12\t\n\x05\x45RROR\x10\x00\x12\r\n\tHEARTBEAT\x10\x01\x12\x11\n\rLOGIN_REQUEST\x10\x02\x12\x12\n\x0eLOGIN_RESPONSE\x10\x03\x12\x11\n\rNINJA_REQUEST\x10\x04\x12\x12\n\x0eNINJA_RESPONSE\x10\x05\x12\x14\n\x10\x41\x43\x43OUNTS_REQUEST\x10\x06\x12\x15\n\x11\x41\x43\x43OUNTS_RESPONSE\x10\x07\x12\x12\n\x0eSHEETS_REQUEST\x10\x08\x12\x13\n\x0fSHEETS_RESPONSE\x10\t\x12\x16\n\x12SHEET_RISK_REQUEST\x10\n\x12\x17\n\x13SHEET_RISK_RESPONSE\x10\x0b\x12\x17\n\x13SHEET_STATE_REQUEST\x10\x0c\x12\x18\n\x14SHEET_STATE_RESPONSE\x10\r\x12\x15\n\x11\x43ONTRACTS_REQUEST\x10\x0e\x12\x16\n\x12\x43ONTRACTS_RESPONSE\x10\x0f\x12\x19\n\x15\x43ONTRACT_INFO_REQUEST\x10\x10\x12\x1a\n\x16\x43ONTRACT_INFO_RESPONSE\x10\x11\x12\x17\n\x13SETTLEMENTS_REQUEST\x10\x12\x12\x18\n\x14SETTLEMENTS_RESPONSE\x10\x13\x12\x1d\n\x19PRICE_FEED_STATUS_REQUEST\x10\x14\x12\x1e\n\x1aPRICE_FEED_STATUS_RESPONSE\x10\x15\x12\x1d\n\x19SECURITY_STATUSES_REQUEST\x10\x16\x12\x1e\n\x1aSECURITY_STATUSES_RESPONSE\x10\x17\x12\x1d\n\x19START_MARKET_DATA_REQUEST\x10\x18\x12\x12\n\x0eMARKET_UPDATES\x10\x19\x12\x1c\n\x18STOP_MARKET_DATA_REQUEST\x10\x1a\x12\x19\n\x15WORKING_RULES_REQUEST\x10\x1b\x12\x1a\n\x16WORKING_RULES_RESPONSE\x10\x1c\x12\x15\n\x11POSITIONS_REQUEST\x10\x1d\x12\x16\n\x12POSITIONS_RESPONSE\x10\x1e\x12\x15\n\x11ORDER_ADD_REQUEST\x10\x1f\x12\x15\n\x11ORDER_ADD_FAILURE\x10 \x12\x13\n\x0fORDER_ADD_EVENT\x10!\x12\x18\n\x14ORDER_CHANGE_REQUEST\x10\"\x12\x18\n\x14ORDER_CHANGE_FAILURE\x10#\x12\x16\n\x12ORDER_CHANGE_EVENT\x10$\x12\x16\n\x12ORDER_REJECT_EVENT\x10%\x12\x18\n\x14ORDER_CANCEL_REQUEST\x10&\x12\x18\n\x14ORDER_CANCEL_FAILURE\x10\'\x12\x16\n\x12ORDER_CANCEL_EVENT\x10(\x12\x1d\n\x19\x43\x41NCEL_ALL_ORDERS_REQUEST\x10)\x12\x15\n\x11MASS_CANCEL_EVENT\x10*\x12\x0f\n\x0b\x46ILL_NOTICE\x10+\x12\x19\n\x15\x41\x43TIVE_ORDERS_REQUEST\x10,\x12\x1a\n\x16\x41\x43TIVE_ORDERS_RESPONSE\x10-\"I\n\x0cMsgContainer\x12(\n\x06header\x18\x01 \x01(\x0b\x32\x18.NinjaApiMessages.Header\x12\x0f\n\x07payload\x18\x02 \x01(\x0c\"\xe4\x07\n\x05\x45rror\x12*\n\x04type\x18\x01 \x01(\x0e\x32\x1c.NinjaApiMessages.Error.Type\x12\x0b\n\x03msg\x18\x02 \x01(\t\"\xa1\x07\n\x04Type\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\x12\n\x0e\x41UTHENTICATION\x10\x01\x12\x11\n\rAUTHORIZATION\x10\x02\x12\x11\n\rNOT_LOGGED_IN\x10\x03\x12\x11\n\rRECEIVE_ERROR\x10\x04\x12\x17\n\x13UNSUPPORTED_MESSAGE\x10\x05\x12\x13\n\x0fINVALID_MESSAGE\x10\x06\x12\x13\n\x0fINVALID_VERSION\x10\x07\x12\x17\n\x13\x43ONNECTION_INACTIVE\x10\x08\x12\x1b\n\x17LOGIN_REQUEST_MALFORMED\x10\t\x12\x1b\n\x17NINJA_REQUEST_MALFORMED\x10\n\x12\x1c\n\x18SHEETS_REQUEST_MALFORMED\x10\x0b\x12 \n\x1cSHEET_RISK_REQUEST_MALFORMED\x10\x0c\x12!\n\x1dSHEET_STATE_REQUEST_MALFORMED\x10\r\x12\x1f\n\x1b\x43ONTRACTS_REQUEST_MALFORMED\x10\x0e\x12#\n\x1f\x43ONTRACT_INFO_REQUEST_MALFORMED\x10\x0f\x12!\n\x1dSETTLEMENTS_REQUEST_MALFORMED\x10\x10\x12\'\n#SECURITY_STATUSES_REQUEST_MALFORMED\x10\x11\x12\'\n#START_MARKET_DATA_REQUEST_MALFORMED\x10\x12\x12&\n\"STOP_MARKET_DATA_REQUEST_MALFORMED\x10\x13\x12#\n\x1fWORKING_RULES_REQUEST_MALFORMED\x10\x14\x12\x1e\n\x1aPOSITION_REQUEST_MALFORMED\x10\x15\x12\x17\n\x13RATE_LIMIT_EXCEEDED\x10\x16\x12\x19\n\x15INTERNAL_SERVER_ERROR\x10\x17\x12\x1c\n\x18PRICE_OR_ORDER_FEED_DOWN\x10\x18\x12$\n MARKET_STATE_DOES_NOT_SUPPORT_OP\x10\x19\x12\x16\n\x12\x43ONTRACT_NOT_FOUND\x10\x1a\x12\x1e\n\x1aNOT_INTERESTED_IN_CONTRACT\x10\x1b\x12\x0f\n\x0bSEND_FAILED\x10\x1c\x12\x1b\n\x17MSG_RATE_LIMIT_EXCEEDED\x10\x1d\x12\x1b\n\x17INVALID_CONNECTION_TYPE\x10\x1e\x12\x1f\n\x1bNO_REGULAR_CLIENT_CONNECTED\x10\x1f\"v\n\x05Login\x12\x0c\n\x04user\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t\x12\x38\n\x0e\x63onnectionType\x18\x03 \x01(\x0e\x32 .NinjaApiMessages.ConnectionType\x12\x13\n\x0b\x61\x63\x63\x65ssToken\x18\x04 \x01(\t\"j\n\rLoginResponse\x12\x38\n\x0e\x63onnectionType\x18\x01 \x01(\x0e\x32 .NinjaApiMessages.ConnectionType\x12\r\n\x05ninja\x18\x02 \x01(\t\x12\x10\n\x08\x61\x63\x63ounts\x18\x03 \x03(\t\"\x19\n\tNinjaInfo\x12\x0c\n\x04name\x18\x01 \x01(\t\"\x1c\n\x08\x41\x63\x63ounts\x12\x10\n\x08\x61\x63\x63ounts\x18\x01 \x03(\t*]\n\x0e\x43onnectionType\x12\x16\n\x12TRADING_CONNECTION\x10\x00\x12\x17\n\x13POSITION_CONNECTION\x10\x01\x12\x1a\n\x16MARKET_DATA_CONNECTION\x10\x02\x62\x06proto3'
 )
 
 _CONNECTIONTYPE = _descriptor.EnumDescriptor(
@@ -48,8 +48,8 @@ _CONNECTIONTYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=2344,
-  serialized_end=2437,
+  serialized_start=2615,
+  serialized_end=2708,
 )
 _sym_db.RegisterEnumDescriptor(_CONNECTIONTYPE)
 
@@ -227,7 +227,7 @@ _HEADER_MSGTYPE = _descriptor.EnumDescriptor(
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='ORDER_ADD_RESPONSE', index=32, number=32,
+      name='ORDER_ADD_FAILURE', index=32, number=32,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
@@ -242,7 +242,7 @@ _HEADER_MSGTYPE = _descriptor.EnumDescriptor(
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='ORDER_CHANGE_RESPONSE', index=35, number=35,
+      name='ORDER_CHANGE_FAILURE', index=35, number=35,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
@@ -252,42 +252,47 @@ _HEADER_MSGTYPE = _descriptor.EnumDescriptor(
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='ORDER_CANCEL_REQUEST', index=37, number=37,
+      name='ORDER_REJECT_EVENT', index=37, number=37,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='ORDER_CANCEL_RESPONSE', index=38, number=38,
+      name='ORDER_CANCEL_REQUEST', index=38, number=38,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='ORDER_CANCEL_EVENT', index=39, number=39,
+      name='ORDER_CANCEL_FAILURE', index=39, number=39,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='CANCEL_ALL_ORDERS_REQUEST', index=40, number=40,
+      name='ORDER_CANCEL_EVENT', index=40, number=40,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='CANCEL_ALL_ORDERS_RESPONSE', index=41, number=41,
+      name='CANCEL_ALL_ORDERS_REQUEST', index=41, number=41,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='FILL_NOTICE', index=42, number=42,
+      name='MASS_CANCEL_EVENT', index=42, number=42,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='ACTIVE_ORDERS_REQUEST', index=43, number=43,
+      name='FILL_NOTICE', index=43, number=43,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='ACTIVE_ORDERS_RESPONSE', index=44, number=44,
+      name='ACTIVE_ORDERS_REQUEST', index=44, number=44,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='ACTIVE_ORDERS_RESPONSE', index=45, number=45,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
@@ -295,7 +300,7 @@ _HEADER_MSGTYPE = _descriptor.EnumDescriptor(
   containing_type=None,
   serialized_options=None,
   serialized_start=124,
-  serialized_end=1242,
+  serialized_end=1254,
 )
 _sym_db.RegisterEnumDescriptor(_HEADER_MSGTYPE)
 
@@ -421,11 +426,56 @@ _ERROR_TYPE = _descriptor.EnumDescriptor(
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='INTERNAL_SERVER_ERROR', index=23, number=23,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='PRICE_OR_ORDER_FEED_DOWN', index=24, number=24,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='MARKET_STATE_DOES_NOT_SUPPORT_OP', index=25, number=25,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='CONTRACT_NOT_FOUND', index=26, number=26,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='NOT_INTERESTED_IN_CONTRACT', index=27, number=27,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='SEND_FAILED', index=28, number=28,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='MSG_RATE_LIMIT_EXCEEDED', index=29, number=29,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='INVALID_CONNECTION_TYPE', index=30, number=30,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='NO_REGULAR_CLIENT_CONNECTED', index=31, number=31,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1387,
-  serialized_end=2057,
+  serialized_start=1399,
+  serialized_end=2328,
 )
 _sym_db.RegisterEnumDescriptor(_ERROR_TYPE)
 
@@ -466,7 +516,7 @@ _HEADER = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=45,
-  serialized_end=1242,
+  serialized_end=1254,
 )
 
 
@@ -504,8 +554,8 @@ _MSGCONTAINER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1244,
-  serialized_end=1317,
+  serialized_start=1256,
+  serialized_end=1329,
 )
 
 
@@ -544,8 +594,8 @@ _ERROR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1320,
-  serialized_end=2057,
+  serialized_start=1332,
+  serialized_end=2328,
 )
 
 
@@ -597,8 +647,8 @@ _LOGIN = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2059,
-  serialized_end=2177,
+  serialized_start=2330,
+  serialized_end=2448,
 )
 
 
@@ -643,8 +693,8 @@ _LOGINRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2179,
-  serialized_end=2285,
+  serialized_start=2450,
+  serialized_end=2556,
 )
 
 
@@ -675,8 +725,8 @@ _NINJAINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2287,
-  serialized_end=2312,
+  serialized_start=2558,
+  serialized_end=2583,
 )
 
 
@@ -707,8 +757,8 @@ _ACCOUNTS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2314,
-  serialized_end=2342,
+  serialized_start=2585,
+  serialized_end=2613,
 )
 
 _HEADER.fields_by_name['msgType'].enum_type = _HEADER_MSGTYPE

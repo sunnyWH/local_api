@@ -3,17 +3,18 @@ package NinjaApiMessages;
 
 enum Exchange {
   UNKNOWN_EXCHANGE = 0;
-  CME     = 1;
-  ICE     = 2;
-  ENDEX   = 3;
-  LIFFE   = 4;
-  CFE     = 5;
-  EUREX   = 6;
-  LME     = 7;
-  B3      = 8;
-  JPX     = 9;
-  FMX_FUT = 10;
-  FMX_UST = 11;
+  CME      = 1;
+  ICE      = 2;
+  ENDEX    = 3;
+  LIFFE    = 4;
+  CFE      = 5;
+  EUREX    = 6;
+  LME      = 7;
+  B3       = 8;
+  JPX      = 9;
+  FMX_FUT  = 10;
+  FMX_UST  = 11;
+  TRAYPORT = 12;
 }
 
 enum Side {

@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x14NinjaApiCommon.proto\x12\x10NinjaApiMessages\"0\n\x04\x44\x61te\x12\x0c\n\x04year\x18\x01 \x01(\r\x12\r\n\x05month\x18\x02 \x01(\r\x12\x0b\n\x03\x64\x61y\x18\x03 \x01(\r\"(\n\x14\x44urationMilliseconds\x12\x10\n\x08\x64uration\x18\x01 \x01(\r\"%\n\x10\x45pochNanoseconds\x12\x11\n\ttimestamp\x18\x01 \x01(\x06*\x90\x01\n\x08\x45xchange\x12\x14\n\x10UNKNOWN_EXCHANGE\x10\x00\x12\x07\n\x03\x43ME\x10\x01\x12\x07\n\x03ICE\x10\x02\x12\t\n\x05\x45NDEX\x10\x03\x12\t\n\x05LIFFE\x10\x04\x12\x07\n\x03\x43\x46\x45\x10\x05\x12\t\n\x05\x45UREX\x10\x06\x12\x07\n\x03LME\x10\x07\x12\x06\n\x02\x42\x33\x10\x08\x12\x07\n\x03JPX\x10\t\x12\x0b\n\x07\x46MX_FUT\x10\n\x12\x0b\n\x07\x46MX_UST\x10\x0b*+\n\x04Side\x12\x10\n\x0cUNKNOWN_SIDE\x10\x00\x12\x07\n\x03\x42UY\x10\x01\x12\x08\n\x04SELL\x10\x02*K\n\tAggressor\x12\x15\n\x11UNKNOWN_AGGRESSOR\x10\x00\x12\t\n\x05\x42UYER\x10\x01\x12\n\n\x06SELLER\x10\x02\x12\x10\n\x0cNO_AGGRESSOR\x10\x03*Y\n\x0fMarketTradeType\x12\x11\n\rREGULAR_TRADE\x10\x00\x12\x11\n\rOPENING_TRADE\x10\x01\x12\x0f\n\x0b\x42LOCK_TRADE\x10\x02\x12\x0f\n\x0bOTHER_TRADE\x10\x03\x62\x06proto3'
+  serialized_pb=b'\n\x14NinjaApiCommon.proto\x12\x10NinjaApiMessages\"0\n\x04\x44\x61te\x12\x0c\n\x04year\x18\x01 \x01(\r\x12\r\n\x05month\x18\x02 \x01(\r\x12\x0b\n\x03\x64\x61y\x18\x03 \x01(\r\"(\n\x14\x44urationMilliseconds\x12\x10\n\x08\x64uration\x18\x01 \x01(\r\"%\n\x10\x45pochNanoseconds\x12\x11\n\ttimestamp\x18\x01 \x01(\x06*\x9e\x01\n\x08\x45xchange\x12\x14\n\x10UNKNOWN_EXCHANGE\x10\x00\x12\x07\n\x03\x43ME\x10\x01\x12\x07\n\x03ICE\x10\x02\x12\t\n\x05\x45NDEX\x10\x03\x12\t\n\x05LIFFE\x10\x04\x12\x07\n\x03\x43\x46\x45\x10\x05\x12\t\n\x05\x45UREX\x10\x06\x12\x07\n\x03LME\x10\x07\x12\x06\n\x02\x42\x33\x10\x08\x12\x07\n\x03JPX\x10\t\x12\x0b\n\x07\x46MX_FUT\x10\n\x12\x0b\n\x07\x46MX_UST\x10\x0b\x12\x0c\n\x08TRAYPORT\x10\x0c*+\n\x04Side\x12\x10\n\x0cUNKNOWN_SIDE\x10\x00\x12\x07\n\x03\x42UY\x10\x01\x12\x08\n\x04SELL\x10\x02*K\n\tAggressor\x12\x15\n\x11UNKNOWN_AGGRESSOR\x10\x00\x12\t\n\x05\x42UYER\x10\x01\x12\n\n\x06SELLER\x10\x02\x12\x10\n\x0cNO_AGGRESSOR\x10\x03*Y\n\x0fMarketTradeType\x12\x11\n\rREGULAR_TRADE\x10\x00\x12\x11\n\rOPENING_TRADE\x10\x01\x12\x0f\n\x0b\x42LOCK_TRADE\x10\x02\x12\x0f\n\x0bOTHER_TRADE\x10\x03\x62\x06proto3'
 )
 
 _EXCHANGE = _descriptor.EnumDescriptor(
@@ -90,11 +90,16 @@ _EXCHANGE = _descriptor.EnumDescriptor(
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='TRAYPORT', index=12, number=12,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
   ],
   containing_type=None,
   serialized_options=None,
   serialized_start=174,
-  serialized_end=318,
+  serialized_end=332,
 )
 _sym_db.RegisterEnumDescriptor(_EXCHANGE)
 
@@ -124,8 +129,8 @@ _SIDE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=320,
-  serialized_end=363,
+  serialized_start=334,
+  serialized_end=377,
 )
 _sym_db.RegisterEnumDescriptor(_SIDE)
 
@@ -160,8 +165,8 @@ _AGGRESSOR = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=365,
-  serialized_end=440,
+  serialized_start=379,
+  serialized_end=454,
 )
 _sym_db.RegisterEnumDescriptor(_AGGRESSOR)
 
@@ -196,8 +201,8 @@ _MARKETTRADETYPE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=442,
-  serialized_end=531,
+  serialized_start=456,
+  serialized_end=545,
 )
 _sym_db.RegisterEnumDescriptor(_MARKETTRADETYPE)
 
@@ -214,6 +219,7 @@ B3 = 8
 JPX = 9
 FMX_FUT = 10
 FMX_UST = 11
+TRAYPORT = 12
 UNKNOWN_SIDE = 0
 BUY = 1
 SELL = 2

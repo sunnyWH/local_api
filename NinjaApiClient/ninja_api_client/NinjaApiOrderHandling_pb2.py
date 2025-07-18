@@ -13,6 +13,7 @@ _sym_db = _symbol_database.Default()
 
 import NinjaApiCommon_pb2 as NinjaApiCommon__pb2
 import NinjaApiContracts_pb2 as NinjaApiContracts__pb2
+import NinjaApiMessages_pb2 as NinjaApiMessages__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -21,36 +22,11 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x1bNinjaApiOrderHandling.proto\x12\x10NinjaApiMessages\x1a\x14NinjaApiCommon.proto\x1a\x17NinjaApiContracts.proto\"m\n\x06Status\x12\x31\n\x07outcome\x18\x01 \x01(\x0e\x32 .NinjaApiMessages.Status.Outcome\x12\x0b\n\x03msg\x18\x02 \x01(\t\"#\n\x07Outcome\x12\x0b\n\x07\x46\x41ILURE\x10\x00\x12\x0b\n\x07SUCCESS\x10\x01\"b\n\x0bTimeInForce\x12\x30\n\x04type\x18\x01 \x01(\x0e\x32\".NinjaApiMessages.TimeInForce.Type\"!\n\x04Type\x12\x07\n\x03\x44\x41Y\x10\x00\x12\x07\n\x03GTC\x10\x01\x12\x07\n\x03IOC\x10\x02\"\xea\x01\n\x08OrderAdd\x12\r\n\x05sheet\x18\x01 \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\x02 \x01(\t\x12\n\n\x02id\x18\x03 \x01(\x04\x12,\n\x08\x63ontract\x18\x04 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12\x32\n\x0btimeInForce\x18\x05 \x01(\x0b\x32\x1d.NinjaApiMessages.TimeInForce\x12$\n\x04side\x18\x06 \x01(\x0e\x32\x16.NinjaApiMessages.Side\x12\x0b\n\x03qty\x18\x07 \x01(\r\x12\r\n\x05price\x18\x08 \x01(\x01\x12\x0e\n\x06prefix\x18\t \x01(\t\"y\n\x10OrderAddResponse\x12\n\n\x02id\x18\x01 \x01(\x04\x12(\n\x06status\x18\x02 \x01(\x0b\x32\x18.NinjaApiMessages.Status\x12\x0f\n\x07orderNo\x18\x03 \x01(\t\x12\r\n\x05sheet\x18\x04 \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\x05 \x01(\t\"\x8c\x02\n\rOrderAddEvent\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12\x16\n\x0etriggerOrderNo\x18\x02 \x01(\t\x12,\n\x08\x63ontract\x18\x03 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12\x32\n\x0btimeInForce\x18\x04 \x01(\x0b\x32\x1d.NinjaApiMessages.TimeInForce\x12$\n\x04side\x18\x05 \x01(\x0e\x32\x16.NinjaApiMessages.Side\x12\x0b\n\x03qty\x18\x06 \x01(\r\x12\r\n\x05price\x18\x07 \x01(\x01\x12\x0e\n\x06prefix\x18\x08 \x01(\t\x12\r\n\x05sheet\x18\t \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\n \x01(\t\"J\n\x0bOrderChange\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12\x0b\n\x03qty\x18\x02 \x01(\r\x12\r\n\x05price\x18\x03 \x01(\x01\x12\x0e\n\x06prefix\x18\x04 \x01(\t\"p\n\x13OrderChangeResponse\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12(\n\x06status\x18\x02 \x01(\x0b\x32\x18.NinjaApiMessages.Status\x12\r\n\x05sheet\x18\x03 \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\x04 \x01(\t\"\xd7\x01\n\x10OrderChangeEvent\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12,\n\x08\x63ontract\x18\x02 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12$\n\x04side\x18\x03 \x01(\x0e\x32\x16.NinjaApiMessages.Side\x12\x0e\n\x06newQty\x18\x04 \x01(\r\x12\x10\n\x08newPrice\x18\x05 \x01(\x01\x12\x0f\n\x07\x63hannel\x18\x06 \x01(\t\x12\x0b\n\x03sqn\x18\x07 \x01(\r\x12\r\n\x05sheet\x18\x08 \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\t \x01(\t\"\x1e\n\x0bOrderCancel\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\"p\n\x13OrderCancelResponse\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12(\n\x06status\x18\x02 \x01(\x0b\x32\x18.NinjaApiMessages.Status\x12\r\n\x05sheet\x18\x03 \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\x04 \x01(\t\"\x81\x01\n\x10OrderCancelEvent\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12,\n\x08\x63ontract\x18\x02 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12\x0e\n\x06reason\x18\x03 \x01(\t\x12\r\n\x05sheet\x18\x04 \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\x05 \x01(\t\"%\n\x0f\x43\x61ncelAllOrders\x12\x12\n\ncancelGTCs\x18\x01 \x01(\x08\"X\n\x17\x43\x61ncelAllOrdersResponse\x12=\n\x0e\x63\x61nceledOrders\x18\x01 \x03(\x0b\x32%.NinjaApiMessages.OrderCancelResponse\"\x84\x04\n\nFillNotice\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12\x12\n\nisApiOrder\x18\x02 \x01(\x08\x12,\n\x08\x63ontract\x18\x03 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12\r\n\x05price\x18\x04 \x01(\x01\x12$\n\x04side\x18\x05 \x01(\x0e\x32\x16.NinjaApiMessages.Side\x12\x0b\n\x03qty\x18\x06 \x01(\r\x12\x15\n\risPartialFill\x18\x07 \x01(\x08\x12\x38\n\x0ctransactTime\x18\x08 \x01(\x0b\x32\".NinjaApiMessages.EpochNanoseconds\x12.\n\taggressor\x18\t \x01(\x0e\x32\x1b.NinjaApiMessages.Aggressor\x12:\n\x0fmarketTradeType\x18\n \x01(\x0e\x32!.NinjaApiMessages.MarketTradeType\x12\x1a\n\x12tradeAffectsVolume\x18\x0b \x01(\x08\x12\r\n\x05sheet\x18\x0c \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\r \x01(\t\x12\x0f\n\x07isQuote\x18\x0e \x01(\x08\x12\x15\n\rstrategyGroup\x18\x0f \x01(\t\x12\x10\n\x08strategy\x18\x10 \x01(\t\x12.\n\x08legFills\x18\x11 \x03(\x0b\x32\x1c.NinjaApiMessages.FillNotice\"Y\n\x0fGetActiveOrders\x12\x19\n\x11showOnlyApiOrders\x18\x01 \x01(\x08\x12+\n\x07\x66ilters\x18\x02 \x03(\x0b\x32\x1a.NinjaApiMessages.Contract\"\xbe\x01\n\x0b\x41\x63tiveOrder\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12,\n\x08\x63ontract\x18\x02 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12$\n\x04side\x18\x03 \x01(\x0e\x32\x16.NinjaApiMessages.Side\x12\x0b\n\x03qty\x18\x04 \x01(\r\x12\r\n\x05price\x18\x05 \x01(\x01\x12\x0e\n\x06prefix\x18\x06 \x01(\t\x12\r\n\x05sheet\x18\x07 \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\x08 \x01(\t\"C\n\x0c\x41\x63tiveOrders\x12\x33\n\x0c\x61\x63tiveOrders\x18\x01 \x03(\x0b\x32\x1d.NinjaApiMessages.ActiveOrderb\x06proto3'
+  serialized_pb=b'\n\x1bNinjaApiOrderHandling.proto\x12\x10NinjaApiMessages\x1a\x14NinjaApiCommon.proto\x1a\x17NinjaApiContracts.proto\x1a\x16NinjaApiMessages.proto\"o\n\x0bTimeInForce\x12\x30\n\x04type\x18\x01 \x01(\x0e\x32\".NinjaApiMessages.TimeInForce.Type\".\n\x04Type\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x07\n\x03\x44\x41Y\x10\x01\x12\x07\n\x03GTC\x10\x02\x12\x07\n\x03IOC\x10\x03\"\xde\x01\n\x08OrderAdd\x12\r\n\x05sheet\x18\x01 \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\x02 \x01(\t\x12,\n\x08\x63ontract\x18\x03 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12\x32\n\x0btimeInForce\x18\x04 \x01(\x0b\x32\x1d.NinjaApiMessages.TimeInForce\x12$\n\x04side\x18\x05 \x01(\x0e\x32\x16.NinjaApiMessages.Side\x12\x0b\n\x03qty\x18\x06 \x01(\r\x12\r\n\x05price\x18\x07 \x01(\x01\x12\x0e\n\x06prefix\x18\x08 \x01(\t\"\xb7\x02\n\x0fOrderAddFailure\x12\x0e\n\x06reason\x18\x01 \x01(\t\x12/\n\terrorCode\x18\x02 \x01(\x0e\x32\x1c.NinjaApiMessages.Error.Type\x12\x0f\n\x07orderNo\x18\x03 \x01(\t\x12,\n\x08\x63ontract\x18\x04 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12\x32\n\x0btimeInForce\x18\x05 \x01(\x0b\x32\x1d.NinjaApiMessages.TimeInForce\x12$\n\x04side\x18\x06 \x01(\x0e\x32\x16.NinjaApiMessages.Side\x12\x0b\n\x03qty\x18\x07 \x01(\r\x12\r\n\x05price\x18\x08 \x01(\x01\x12\x0e\n\x06prefix\x18\t \x01(\t\x12\r\n\x05sheet\x18\n \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\x0b \x01(\t\"\x8c\x02\n\rOrderAddEvent\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12\x16\n\x0etriggerOrderNo\x18\x02 \x01(\t\x12,\n\x08\x63ontract\x18\x03 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12\x32\n\x0btimeInForce\x18\x04 \x01(\x0b\x32\x1d.NinjaApiMessages.TimeInForce\x12$\n\x04side\x18\x05 \x01(\x0e\x32\x16.NinjaApiMessages.Side\x12\x0b\n\x03qty\x18\x06 \x01(\r\x12\r\n\x05price\x18\x07 \x01(\x01\x12\x0e\n\x06prefix\x18\x08 \x01(\t\x12\r\n\x05sheet\x18\t \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\n \x01(\t\"J\n\x0bOrderChange\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12\x0b\n\x03qty\x18\x02 \x01(\r\x12\r\n\x05price\x18\x03 \x01(\x01\x12\x0e\n\x06prefix\x18\x04 \x01(\t\"\x86\x02\n\x12OrderChangeFailure\x12\x0e\n\x06reason\x18\x01 \x01(\t\x12/\n\terrorCode\x18\x02 \x01(\x0e\x32\x1c.NinjaApiMessages.Error.Type\x12\x0f\n\x07orderNo\x18\x03 \x01(\t\x12,\n\x08\x63ontract\x18\x04 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12$\n\x04side\x18\x05 \x01(\x0e\x32\x16.NinjaApiMessages.Side\x12\x0b\n\x03qty\x18\x06 \x01(\r\x12\r\n\x05price\x18\x07 \x01(\x01\x12\x0e\n\x06prefix\x18\x08 \x01(\t\x12\r\n\x05sheet\x18\t \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\n \x01(\t\"\xe1\x01\n\x10OrderChangeEvent\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12,\n\x08\x63ontract\x18\x02 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12$\n\x04side\x18\x03 \x01(\x0e\x32\x16.NinjaApiMessages.Side\x12\x0b\n\x03qty\x18\x04 \x01(\r\x12\r\n\x05price\x18\x05 \x01(\x01\x12\x0e\n\x06prefix\x18\x06 \x01(\t\x12\x0f\n\x07\x63hannel\x18\x07 \x01(\t\x12\x0b\n\x03sqn\x18\x08 \x01(\r\x12\r\n\x05sheet\x18\t \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\n \x01(\t\"\x1e\n\x0bOrderCancel\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\"\xb4\x01\n\x12OrderCancelFailure\x12\x0e\n\x06reason\x18\x01 \x01(\t\x12/\n\terrorCode\x18\x02 \x01(\x0e\x32\x1c.NinjaApiMessages.Error.Type\x12\x0f\n\x07orderNo\x18\x03 \x01(\t\x12,\n\x08\x63ontract\x18\x04 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12\r\n\x05sheet\x18\x05 \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\x06 \x01(\t\"\x81\x01\n\x10OrderCancelEvent\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12,\n\x08\x63ontract\x18\x02 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12\x0e\n\x06reason\x18\x03 \x01(\t\x12\r\n\x05sheet\x18\x04 \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\x05 \x01(\t\"\xe7\x01\n\x10OrderRejectEvent\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12,\n\x08\x63ontract\x18\x02 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12\x39\n\x06\x61\x63tion\x18\x03 \x01(\x0e\x32).NinjaApiMessages.OrderRejectEvent.Action\x12\x0e\n\x06reason\x18\x04 \x01(\t\x12\r\n\x05sheet\x18\x05 \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\x06 \x01(\t\")\n\x06\x41\x63tion\x12\x07\n\x03\x41\x44\x44\x10\x00\x12\n\n\x06\x43HANGE\x10\x01\x12\n\n\x06\x43\x41NCEL\x10\x02\"%\n\x0f\x43\x61ncelAllOrders\x12\x12\n\ncancelGTCs\x18\x01 \x01(\x08\"M\n\x0fMassCancelEvent\x12:\n\x0e\x63\x61nceledOrders\x18\x01 \x03(\x0b\x32\".NinjaApiMessages.OrderCancelEvent\"\x84\x04\n\nFillNotice\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12\x12\n\nisApiOrder\x18\x02 \x01(\x08\x12,\n\x08\x63ontract\x18\x03 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12\r\n\x05price\x18\x04 \x01(\x01\x12$\n\x04side\x18\x05 \x01(\x0e\x32\x16.NinjaApiMessages.Side\x12\x0b\n\x03qty\x18\x06 \x01(\r\x12\x15\n\risPartialFill\x18\x07 \x01(\x08\x12\x38\n\x0ctransactTime\x18\x08 \x01(\x0b\x32\".NinjaApiMessages.EpochNanoseconds\x12.\n\taggressor\x18\t \x01(\x0e\x32\x1b.NinjaApiMessages.Aggressor\x12:\n\x0fmarketTradeType\x18\n \x01(\x0e\x32!.NinjaApiMessages.MarketTradeType\x12\x1a\n\x12tradeAffectsVolume\x18\x0b \x01(\x08\x12\r\n\x05sheet\x18\x0c \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\r \x01(\t\x12\x0f\n\x07isQuote\x18\x0e \x01(\x08\x12\x15\n\rstrategyGroup\x18\x0f \x01(\t\x12\x10\n\x08strategy\x18\x10 \x01(\t\x12.\n\x08legFills\x18\x11 \x03(\x0b\x32\x1c.NinjaApiMessages.FillNotice\"Y\n\x0fGetActiveOrders\x12\x19\n\x11showOnlyApiOrders\x18\x01 \x01(\x08\x12+\n\x07\x66ilters\x18\x02 \x03(\x0b\x32\x1a.NinjaApiMessages.Contract\"\xbe\x01\n\x0b\x41\x63tiveOrder\x12\x0f\n\x07orderNo\x18\x01 \x01(\t\x12,\n\x08\x63ontract\x18\x02 \x01(\x0b\x32\x1a.NinjaApiMessages.Contract\x12$\n\x04side\x18\x03 \x01(\x0e\x32\x16.NinjaApiMessages.Side\x12\x0b\n\x03qty\x18\x04 \x01(\r\x12\r\n\x05price\x18\x05 \x01(\x01\x12\x0e\n\x06prefix\x18\x06 \x01(\t\x12\r\n\x05sheet\x18\x07 \x01(\t\x12\x0f\n\x07\x61\x63\x63ount\x18\x08 \x01(\t\"C\n\x0c\x41\x63tiveOrders\x12\x33\n\x0c\x61\x63tiveOrders\x18\x01 \x03(\x0b\x32\x1d.NinjaApiMessages.ActiveOrderb\x06proto3'
   ,
-  dependencies=[NinjaApiCommon__pb2.DESCRIPTOR,NinjaApiContracts__pb2.DESCRIPTOR,])
+  dependencies=[NinjaApiCommon__pb2.DESCRIPTOR,NinjaApiContracts__pb2.DESCRIPTOR,NinjaApiMessages__pb2.DESCRIPTOR,])
 
 
-
-_STATUS_OUTCOME = _descriptor.EnumDescriptor(
-  name='Outcome',
-  full_name='NinjaApiMessages.Status.Outcome',
-  filename=None,
-  file=DESCRIPTOR,
-  create_key=_descriptor._internal_create_key,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='FAILURE', index=0, number=0,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='SUCCESS', index=1, number=1,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=170,
-  serialized_end=205,
-)
-_sym_db.RegisterEnumDescriptor(_STATUS_OUTCOME)
 
 _TIMEINFORCE_TYPE = _descriptor.EnumDescriptor(
   name='Type',
@@ -60,67 +36,62 @@ _TIMEINFORCE_TYPE = _descriptor.EnumDescriptor(
   create_key=_descriptor._internal_create_key,
   values=[
     _descriptor.EnumValueDescriptor(
-      name='DAY', index=0, number=0,
+      name='UNKNOWN', index=0, number=0,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='GTC', index=1, number=1,
+      name='DAY', index=1, number=1,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='IOC', index=2, number=2,
+      name='GTC', index=2, number=2,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='IOC', index=3, number=3,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=272,
-  serialized_end=305,
+  serialized_start=185,
+  serialized_end=231,
 )
 _sym_db.RegisterEnumDescriptor(_TIMEINFORCE_TYPE)
 
-
-_STATUS = _descriptor.Descriptor(
-  name='Status',
-  full_name='NinjaApiMessages.Status',
+_ORDERREJECTEVENT_ACTION = _descriptor.EnumDescriptor(
+  name='Action',
+  full_name='NinjaApiMessages.OrderRejectEvent.Action',
   filename=None,
   file=DESCRIPTOR,
-  containing_type=None,
   create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='outcome', full_name='NinjaApiMessages.Status.outcome', index=0,
-      number=1, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='msg', full_name='NinjaApiMessages.Status.msg', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='ADD', index=0, number=0,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='CHANGE', index=1, number=1,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='CANCEL', index=2, number=2,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
   ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-    _STATUS_OUTCOME,
-  ],
+  containing_type=None,
   serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=96,
-  serialized_end=205,
+  serialized_start=2150,
+  serialized_end=2191,
 )
+_sym_db.RegisterEnumDescriptor(_ORDERREJECTEVENT_ACTION)
 
 
 _TIMEINFORCE = _descriptor.Descriptor(
@@ -151,8 +122,8 @@ _TIMEINFORCE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=207,
-  serialized_end=305,
+  serialized_start=120,
+  serialized_end=231,
 )
 
 
@@ -179,50 +150,43 @@ _ORDERADD = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='id', full_name='NinjaApiMessages.OrderAdd.id', index=2,
-      number=3, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
+      name='contract', full_name='NinjaApiMessages.OrderAdd.contract', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='contract', full_name='NinjaApiMessages.OrderAdd.contract', index=3,
+      name='timeInForce', full_name='NinjaApiMessages.OrderAdd.timeInForce', index=3,
       number=4, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='timeInForce', full_name='NinjaApiMessages.OrderAdd.timeInForce', index=4,
-      number=5, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='side', full_name='NinjaApiMessages.OrderAdd.side', index=5,
-      number=6, type=14, cpp_type=8, label=1,
+      name='side', full_name='NinjaApiMessages.OrderAdd.side', index=4,
+      number=5, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='qty', full_name='NinjaApiMessages.OrderAdd.qty', index=6,
-      number=7, type=13, cpp_type=3, label=1,
+      name='qty', full_name='NinjaApiMessages.OrderAdd.qty', index=5,
+      number=6, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='price', full_name='NinjaApiMessages.OrderAdd.price', index=7,
-      number=8, type=1, cpp_type=5, label=1,
+      name='price', full_name='NinjaApiMessages.OrderAdd.price', index=6,
+      number=7, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='prefix', full_name='NinjaApiMessages.OrderAdd.prefix', index=8,
-      number=9, type=9, cpp_type=9, label=1,
+      name='prefix', full_name='NinjaApiMessages.OrderAdd.prefix', index=7,
+      number=8, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -239,50 +203,92 @@ _ORDERADD = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=308,
-  serialized_end=542,
+  serialized_start=234,
+  serialized_end=456,
 )
 
 
-_ORDERADDRESPONSE = _descriptor.Descriptor(
-  name='OrderAddResponse',
-  full_name='NinjaApiMessages.OrderAddResponse',
+_ORDERADDFAILURE = _descriptor.Descriptor(
+  name='OrderAddFailure',
+  full_name='NinjaApiMessages.OrderAddFailure',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='id', full_name='NinjaApiMessages.OrderAddResponse.id', index=0,
-      number=1, type=4, cpp_type=4, label=1,
+      name='reason', full_name='NinjaApiMessages.OrderAddFailure.reason', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='errorCode', full_name='NinjaApiMessages.OrderAddFailure.errorCode', index=1,
+      number=2, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='status', full_name='NinjaApiMessages.OrderAddResponse.status', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='orderNo', full_name='NinjaApiMessages.OrderAddResponse.orderNo', index=2,
+      name='orderNo', full_name='NinjaApiMessages.OrderAddFailure.orderNo', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='sheet', full_name='NinjaApiMessages.OrderAddResponse.sheet', index=3,
-      number=4, type=9, cpp_type=9, label=1,
+      name='contract', full_name='NinjaApiMessages.OrderAddFailure.contract', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='timeInForce', full_name='NinjaApiMessages.OrderAddFailure.timeInForce', index=4,
+      number=5, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='side', full_name='NinjaApiMessages.OrderAddFailure.side', index=5,
+      number=6, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='qty', full_name='NinjaApiMessages.OrderAddFailure.qty', index=6,
+      number=7, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='price', full_name='NinjaApiMessages.OrderAddFailure.price', index=7,
+      number=8, type=1, cpp_type=5, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='prefix', full_name='NinjaApiMessages.OrderAddFailure.prefix', index=8,
+      number=9, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='account', full_name='NinjaApiMessages.OrderAddResponse.account', index=4,
-      number=5, type=9, cpp_type=9, label=1,
+      name='sheet', full_name='NinjaApiMessages.OrderAddFailure.sheet', index=9,
+      number=10, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='account', full_name='NinjaApiMessages.OrderAddFailure.account', index=10,
+      number=11, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -299,8 +305,8 @@ _ORDERADDRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=544,
-  serialized_end=665,
+  serialized_start=459,
+  serialized_end=770,
 )
 
 
@@ -394,8 +400,8 @@ _ORDERADDEVENT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=668,
-  serialized_end=936,
+  serialized_start=773,
+  serialized_end=1041,
 )
 
 
@@ -447,43 +453,85 @@ _ORDERCHANGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=938,
-  serialized_end=1012,
+  serialized_start=1043,
+  serialized_end=1117,
 )
 
 
-_ORDERCHANGERESPONSE = _descriptor.Descriptor(
-  name='OrderChangeResponse',
-  full_name='NinjaApiMessages.OrderChangeResponse',
+_ORDERCHANGEFAILURE = _descriptor.Descriptor(
+  name='OrderChangeFailure',
+  full_name='NinjaApiMessages.OrderChangeFailure',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='orderNo', full_name='NinjaApiMessages.OrderChangeResponse.orderNo', index=0,
+      name='reason', full_name='NinjaApiMessages.OrderChangeFailure.reason', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='status', full_name='NinjaApiMessages.OrderChangeResponse.status', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='errorCode', full_name='NinjaApiMessages.OrderChangeFailure.errorCode', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='sheet', full_name='NinjaApiMessages.OrderChangeResponse.sheet', index=2,
+      name='orderNo', full_name='NinjaApiMessages.OrderChangeFailure.orderNo', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='account', full_name='NinjaApiMessages.OrderChangeResponse.account', index=3,
-      number=4, type=9, cpp_type=9, label=1,
+      name='contract', full_name='NinjaApiMessages.OrderChangeFailure.contract', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='side', full_name='NinjaApiMessages.OrderChangeFailure.side', index=4,
+      number=5, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='qty', full_name='NinjaApiMessages.OrderChangeFailure.qty', index=5,
+      number=6, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='price', full_name='NinjaApiMessages.OrderChangeFailure.price', index=6,
+      number=7, type=1, cpp_type=5, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='prefix', full_name='NinjaApiMessages.OrderChangeFailure.prefix', index=7,
+      number=8, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='sheet', full_name='NinjaApiMessages.OrderChangeFailure.sheet', index=8,
+      number=9, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='account', full_name='NinjaApiMessages.OrderChangeFailure.account', index=9,
+      number=10, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -500,8 +548,8 @@ _ORDERCHANGERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1014,
-  serialized_end=1126,
+  serialized_start=1120,
+  serialized_end=1382,
 )
 
 
@@ -535,43 +583,50 @@ _ORDERCHANGEEVENT = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='newQty', full_name='NinjaApiMessages.OrderChangeEvent.newQty', index=3,
+      name='qty', full_name='NinjaApiMessages.OrderChangeEvent.qty', index=3,
       number=4, type=13, cpp_type=3, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='newPrice', full_name='NinjaApiMessages.OrderChangeEvent.newPrice', index=4,
+      name='price', full_name='NinjaApiMessages.OrderChangeEvent.price', index=4,
       number=5, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='channel', full_name='NinjaApiMessages.OrderChangeEvent.channel', index=5,
+      name='prefix', full_name='NinjaApiMessages.OrderChangeEvent.prefix', index=5,
       number=6, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='sqn', full_name='NinjaApiMessages.OrderChangeEvent.sqn', index=6,
-      number=7, type=13, cpp_type=3, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='sheet', full_name='NinjaApiMessages.OrderChangeEvent.sheet', index=7,
-      number=8, type=9, cpp_type=9, label=1,
+      name='channel', full_name='NinjaApiMessages.OrderChangeEvent.channel', index=6,
+      number=7, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='account', full_name='NinjaApiMessages.OrderChangeEvent.account', index=8,
+      name='sqn', full_name='NinjaApiMessages.OrderChangeEvent.sqn', index=7,
+      number=8, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='sheet', full_name='NinjaApiMessages.OrderChangeEvent.sheet', index=8,
       number=9, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='account', full_name='NinjaApiMessages.OrderChangeEvent.account', index=9,
+      number=10, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -588,8 +643,8 @@ _ORDERCHANGEEVENT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1129,
-  serialized_end=1344,
+  serialized_start=1385,
+  serialized_end=1610,
 )
 
 
@@ -620,43 +675,57 @@ _ORDERCANCEL = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1346,
-  serialized_end=1376,
+  serialized_start=1612,
+  serialized_end=1642,
 )
 
 
-_ORDERCANCELRESPONSE = _descriptor.Descriptor(
-  name='OrderCancelResponse',
-  full_name='NinjaApiMessages.OrderCancelResponse',
+_ORDERCANCELFAILURE = _descriptor.Descriptor(
+  name='OrderCancelFailure',
+  full_name='NinjaApiMessages.OrderCancelFailure',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='orderNo', full_name='NinjaApiMessages.OrderCancelResponse.orderNo', index=0,
+      name='reason', full_name='NinjaApiMessages.OrderCancelFailure.reason', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='status', full_name='NinjaApiMessages.OrderCancelResponse.status', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='errorCode', full_name='NinjaApiMessages.OrderCancelFailure.errorCode', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='sheet', full_name='NinjaApiMessages.OrderCancelResponse.sheet', index=2,
+      name='orderNo', full_name='NinjaApiMessages.OrderCancelFailure.orderNo', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='account', full_name='NinjaApiMessages.OrderCancelResponse.account', index=3,
-      number=4, type=9, cpp_type=9, label=1,
+      name='contract', full_name='NinjaApiMessages.OrderCancelFailure.contract', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='sheet', full_name='NinjaApiMessages.OrderCancelFailure.sheet', index=4,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='account', full_name='NinjaApiMessages.OrderCancelFailure.account', index=5,
+      number=6, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -673,8 +742,8 @@ _ORDERCANCELRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1378,
-  serialized_end=1490,
+  serialized_start=1645,
+  serialized_end=1825,
 )
 
 
@@ -733,8 +802,76 @@ _ORDERCANCELEVENT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1493,
-  serialized_end=1622,
+  serialized_start=1828,
+  serialized_end=1957,
+)
+
+
+_ORDERREJECTEVENT = _descriptor.Descriptor(
+  name='OrderRejectEvent',
+  full_name='NinjaApiMessages.OrderRejectEvent',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='orderNo', full_name='NinjaApiMessages.OrderRejectEvent.orderNo', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='contract', full_name='NinjaApiMessages.OrderRejectEvent.contract', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='action', full_name='NinjaApiMessages.OrderRejectEvent.action', index=2,
+      number=3, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='reason', full_name='NinjaApiMessages.OrderRejectEvent.reason', index=3,
+      number=4, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='sheet', full_name='NinjaApiMessages.OrderRejectEvent.sheet', index=4,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='account', full_name='NinjaApiMessages.OrderRejectEvent.account', index=5,
+      number=6, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+    _ORDERREJECTEVENT_ACTION,
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1960,
+  serialized_end=2191,
 )
 
 
@@ -765,21 +902,21 @@ _CANCELALLORDERS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1624,
-  serialized_end=1661,
+  serialized_start=2193,
+  serialized_end=2230,
 )
 
 
-_CANCELALLORDERSRESPONSE = _descriptor.Descriptor(
-  name='CancelAllOrdersResponse',
-  full_name='NinjaApiMessages.CancelAllOrdersResponse',
+_MASSCANCELEVENT = _descriptor.Descriptor(
+  name='MassCancelEvent',
+  full_name='NinjaApiMessages.MassCancelEvent',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='canceledOrders', full_name='NinjaApiMessages.CancelAllOrdersResponse.canceledOrders', index=0,
+      name='canceledOrders', full_name='NinjaApiMessages.MassCancelEvent.canceledOrders', index=0,
       number=1, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -797,8 +934,8 @@ _CANCELALLORDERSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1663,
-  serialized_end=1751,
+  serialized_start=2232,
+  serialized_end=2309,
 )
 
 
@@ -941,8 +1078,8 @@ _FILLNOTICE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1754,
-  serialized_end=2270,
+  serialized_start=2312,
+  serialized_end=2828,
 )
 
 
@@ -980,8 +1117,8 @@ _GETACTIVEORDERS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2272,
-  serialized_end=2361,
+  serialized_start=2830,
+  serialized_end=2919,
 )
 
 
@@ -1061,8 +1198,8 @@ _ACTIVEORDER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2364,
-  serialized_end=2554,
+  serialized_start=2922,
+  serialized_end=3112,
 )
 
 
@@ -1093,27 +1230,34 @@ _ACTIVEORDERS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2556,
-  serialized_end=2623,
+  serialized_start=3114,
+  serialized_end=3181,
 )
 
-_STATUS.fields_by_name['outcome'].enum_type = _STATUS_OUTCOME
-_STATUS_OUTCOME.containing_type = _STATUS
 _TIMEINFORCE.fields_by_name['type'].enum_type = _TIMEINFORCE_TYPE
 _TIMEINFORCE_TYPE.containing_type = _TIMEINFORCE
 _ORDERADD.fields_by_name['contract'].message_type = NinjaApiContracts__pb2._CONTRACT
 _ORDERADD.fields_by_name['timeInForce'].message_type = _TIMEINFORCE
 _ORDERADD.fields_by_name['side'].enum_type = NinjaApiCommon__pb2._SIDE
-_ORDERADDRESPONSE.fields_by_name['status'].message_type = _STATUS
+_ORDERADDFAILURE.fields_by_name['errorCode'].enum_type = NinjaApiMessages__pb2._ERROR_TYPE
+_ORDERADDFAILURE.fields_by_name['contract'].message_type = NinjaApiContracts__pb2._CONTRACT
+_ORDERADDFAILURE.fields_by_name['timeInForce'].message_type = _TIMEINFORCE
+_ORDERADDFAILURE.fields_by_name['side'].enum_type = NinjaApiCommon__pb2._SIDE
 _ORDERADDEVENT.fields_by_name['contract'].message_type = NinjaApiContracts__pb2._CONTRACT
 _ORDERADDEVENT.fields_by_name['timeInForce'].message_type = _TIMEINFORCE
 _ORDERADDEVENT.fields_by_name['side'].enum_type = NinjaApiCommon__pb2._SIDE
-_ORDERCHANGERESPONSE.fields_by_name['status'].message_type = _STATUS
+_ORDERCHANGEFAILURE.fields_by_name['errorCode'].enum_type = NinjaApiMessages__pb2._ERROR_TYPE
+_ORDERCHANGEFAILURE.fields_by_name['contract'].message_type = NinjaApiContracts__pb2._CONTRACT
+_ORDERCHANGEFAILURE.fields_by_name['side'].enum_type = NinjaApiCommon__pb2._SIDE
 _ORDERCHANGEEVENT.fields_by_name['contract'].message_type = NinjaApiContracts__pb2._CONTRACT
 _ORDERCHANGEEVENT.fields_by_name['side'].enum_type = NinjaApiCommon__pb2._SIDE
-_ORDERCANCELRESPONSE.fields_by_name['status'].message_type = _STATUS
+_ORDERCANCELFAILURE.fields_by_name['errorCode'].enum_type = NinjaApiMessages__pb2._ERROR_TYPE
+_ORDERCANCELFAILURE.fields_by_name['contract'].message_type = NinjaApiContracts__pb2._CONTRACT
 _ORDERCANCELEVENT.fields_by_name['contract'].message_type = NinjaApiContracts__pb2._CONTRACT
-_CANCELALLORDERSRESPONSE.fields_by_name['canceledOrders'].message_type = _ORDERCANCELRESPONSE
+_ORDERREJECTEVENT.fields_by_name['contract'].message_type = NinjaApiContracts__pb2._CONTRACT
+_ORDERREJECTEVENT.fields_by_name['action'].enum_type = _ORDERREJECTEVENT_ACTION
+_ORDERREJECTEVENT_ACTION.containing_type = _ORDERREJECTEVENT
+_MASSCANCELEVENT.fields_by_name['canceledOrders'].message_type = _ORDERCANCELEVENT
 _FILLNOTICE.fields_by_name['contract'].message_type = NinjaApiContracts__pb2._CONTRACT
 _FILLNOTICE.fields_by_name['side'].enum_type = NinjaApiCommon__pb2._SIDE
 _FILLNOTICE.fields_by_name['transactTime'].message_type = NinjaApiCommon__pb2._EPOCHNANOSECONDS
@@ -1124,31 +1268,24 @@ _GETACTIVEORDERS.fields_by_name['filters'].message_type = NinjaApiContracts__pb2
 _ACTIVEORDER.fields_by_name['contract'].message_type = NinjaApiContracts__pb2._CONTRACT
 _ACTIVEORDER.fields_by_name['side'].enum_type = NinjaApiCommon__pb2._SIDE
 _ACTIVEORDERS.fields_by_name['activeOrders'].message_type = _ACTIVEORDER
-DESCRIPTOR.message_types_by_name['Status'] = _STATUS
 DESCRIPTOR.message_types_by_name['TimeInForce'] = _TIMEINFORCE
 DESCRIPTOR.message_types_by_name['OrderAdd'] = _ORDERADD
-DESCRIPTOR.message_types_by_name['OrderAddResponse'] = _ORDERADDRESPONSE
+DESCRIPTOR.message_types_by_name['OrderAddFailure'] = _ORDERADDFAILURE
 DESCRIPTOR.message_types_by_name['OrderAddEvent'] = _ORDERADDEVENT
 DESCRIPTOR.message_types_by_name['OrderChange'] = _ORDERCHANGE
-DESCRIPTOR.message_types_by_name['OrderChangeResponse'] = _ORDERCHANGERESPONSE
+DESCRIPTOR.message_types_by_name['OrderChangeFailure'] = _ORDERCHANGEFAILURE
 DESCRIPTOR.message_types_by_name['OrderChangeEvent'] = _ORDERCHANGEEVENT
 DESCRIPTOR.message_types_by_name['OrderCancel'] = _ORDERCANCEL
-DESCRIPTOR.message_types_by_name['OrderCancelResponse'] = _ORDERCANCELRESPONSE
+DESCRIPTOR.message_types_by_name['OrderCancelFailure'] = _ORDERCANCELFAILURE
 DESCRIPTOR.message_types_by_name['OrderCancelEvent'] = _ORDERCANCELEVENT
+DESCRIPTOR.message_types_by_name['OrderRejectEvent'] = _ORDERREJECTEVENT
 DESCRIPTOR.message_types_by_name['CancelAllOrders'] = _CANCELALLORDERS
-DESCRIPTOR.message_types_by_name['CancelAllOrdersResponse'] = _CANCELALLORDERSRESPONSE
+DESCRIPTOR.message_types_by_name['MassCancelEvent'] = _MASSCANCELEVENT
 DESCRIPTOR.message_types_by_name['FillNotice'] = _FILLNOTICE
 DESCRIPTOR.message_types_by_name['GetActiveOrders'] = _GETACTIVEORDERS
 DESCRIPTOR.message_types_by_name['ActiveOrder'] = _ACTIVEORDER
 DESCRIPTOR.message_types_by_name['ActiveOrders'] = _ACTIVEORDERS
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
-Status = _reflection.GeneratedProtocolMessageType('Status', (_message.Message,), {
-  'DESCRIPTOR' : _STATUS,
-  '__module__' : 'NinjaApiOrderHandling_pb2'
-  # @@protoc_insertion_point(class_scope:NinjaApiMessages.Status)
-  })
-_sym_db.RegisterMessage(Status)
 
 TimeInForce = _reflection.GeneratedProtocolMessageType('TimeInForce', (_message.Message,), {
   'DESCRIPTOR' : _TIMEINFORCE,
@@ -1164,12 +1301,12 @@ OrderAdd = _reflection.GeneratedProtocolMessageType('OrderAdd', (_message.Messag
   })
 _sym_db.RegisterMessage(OrderAdd)
 
-OrderAddResponse = _reflection.GeneratedProtocolMessageType('OrderAddResponse', (_message.Message,), {
-  'DESCRIPTOR' : _ORDERADDRESPONSE,
+OrderAddFailure = _reflection.GeneratedProtocolMessageType('OrderAddFailure', (_message.Message,), {
+  'DESCRIPTOR' : _ORDERADDFAILURE,
   '__module__' : 'NinjaApiOrderHandling_pb2'
-  # @@protoc_insertion_point(class_scope:NinjaApiMessages.OrderAddResponse)
+  # @@protoc_insertion_point(class_scope:NinjaApiMessages.OrderAddFailure)
   })
-_sym_db.RegisterMessage(OrderAddResponse)
+_sym_db.RegisterMessage(OrderAddFailure)
 
 OrderAddEvent = _reflection.GeneratedProtocolMessageType('OrderAddEvent', (_message.Message,), {
   'DESCRIPTOR' : _ORDERADDEVENT,
@@ -1185,12 +1322,12 @@ OrderChange = _reflection.GeneratedProtocolMessageType('OrderChange', (_message.
   })
 _sym_db.RegisterMessage(OrderChange)
 
-OrderChangeResponse = _reflection.GeneratedProtocolMessageType('OrderChangeResponse', (_message.Message,), {
-  'DESCRIPTOR' : _ORDERCHANGERESPONSE,
+OrderChangeFailure = _reflection.GeneratedProtocolMessageType('OrderChangeFailure', (_message.Message,), {
+  'DESCRIPTOR' : _ORDERCHANGEFAILURE,
   '__module__' : 'NinjaApiOrderHandling_pb2'
-  # @@protoc_insertion_point(class_scope:NinjaApiMessages.OrderChangeResponse)
+  # @@protoc_insertion_point(class_scope:NinjaApiMessages.OrderChangeFailure)
   })
-_sym_db.RegisterMessage(OrderChangeResponse)
+_sym_db.RegisterMessage(OrderChangeFailure)
 
 OrderChangeEvent = _reflection.GeneratedProtocolMessageType('OrderChangeEvent', (_message.Message,), {
   'DESCRIPTOR' : _ORDERCHANGEEVENT,
@@ -1206,12 +1343,12 @@ OrderCancel = _reflection.GeneratedProtocolMessageType('OrderCancel', (_message.
   })
 _sym_db.RegisterMessage(OrderCancel)
 
-OrderCancelResponse = _reflection.GeneratedProtocolMessageType('OrderCancelResponse', (_message.Message,), {
-  'DESCRIPTOR' : _ORDERCANCELRESPONSE,
+OrderCancelFailure = _reflection.GeneratedProtocolMessageType('OrderCancelFailure', (_message.Message,), {
+  'DESCRIPTOR' : _ORDERCANCELFAILURE,
   '__module__' : 'NinjaApiOrderHandling_pb2'
-  # @@protoc_insertion_point(class_scope:NinjaApiMessages.OrderCancelResponse)
+  # @@protoc_insertion_point(class_scope:NinjaApiMessages.OrderCancelFailure)
   })
-_sym_db.RegisterMessage(OrderCancelResponse)
+_sym_db.RegisterMessage(OrderCancelFailure)
 
 OrderCancelEvent = _reflection.GeneratedProtocolMessageType('OrderCancelEvent', (_message.Message,), {
   'DESCRIPTOR' : _ORDERCANCELEVENT,
@@ -1220,6 +1357,13 @@ OrderCancelEvent = _reflection.GeneratedProtocolMessageType('OrderCancelEvent', 
   })
 _sym_db.RegisterMessage(OrderCancelEvent)
 
+OrderRejectEvent = _reflection.GeneratedProtocolMessageType('OrderRejectEvent', (_message.Message,), {
+  'DESCRIPTOR' : _ORDERREJECTEVENT,
+  '__module__' : 'NinjaApiOrderHandling_pb2'
+  # @@protoc_insertion_point(class_scope:NinjaApiMessages.OrderRejectEvent)
+  })
+_sym_db.RegisterMessage(OrderRejectEvent)
+
 CancelAllOrders = _reflection.GeneratedProtocolMessageType('CancelAllOrders', (_message.Message,), {
   'DESCRIPTOR' : _CANCELALLORDERS,
   '__module__' : 'NinjaApiOrderHandling_pb2'
@@ -1227,12 +1371,12 @@ CancelAllOrders = _reflection.GeneratedProtocolMessageType('CancelAllOrders', (_
   })
 _sym_db.RegisterMessage(CancelAllOrders)
 
-CancelAllOrdersResponse = _reflection.GeneratedProtocolMessageType('CancelAllOrdersResponse', (_message.Message,), {
-  'DESCRIPTOR' : _CANCELALLORDERSRESPONSE,
+MassCancelEvent = _reflection.GeneratedProtocolMessageType('MassCancelEvent', (_message.Message,), {
+  'DESCRIPTOR' : _MASSCANCELEVENT,
   '__module__' : 'NinjaApiOrderHandling_pb2'
-  # @@protoc_insertion_point(class_scope:NinjaApiMessages.CancelAllOrdersResponse)
+  # @@protoc_insertion_point(class_scope:NinjaApiMessages.MassCancelEvent)
   })
-_sym_db.RegisterMessage(CancelAllOrdersResponse)
+_sym_db.RegisterMessage(MassCancelEvent)
 
 FillNotice = _reflection.GeneratedProtocolMessageType('FillNotice', (_message.Message,), {
   'DESCRIPTOR' : _FILLNOTICE,
