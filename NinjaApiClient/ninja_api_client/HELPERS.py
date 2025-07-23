@@ -20,7 +20,7 @@ class TradingLogger:
                 writer = csv.writer(f)
                 writer.writerow(["time", "price", "quantity"])
 
-    def log_trade(self, time, price, quantity, notes=""):
+    def log_trade(self, time, price, quantity, strategy="", notes=""):
         now = datetime.now()
         today = now.date()
         if today != self.current_date:
@@ -31,5 +31,5 @@ class TradingLogger:
 
         with open(self.filename, mode="a", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow([time, price, quantity, notes])
-            logging.info(f"Logged trade: {price}, {quantity}, {notes}")
+            writer.writerow([time, strategy, price, quantity, notes])
+            logging.info(f"Logged trade: {strategy}, {price}, {quantity}, {notes}")

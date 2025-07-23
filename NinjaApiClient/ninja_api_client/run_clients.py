@@ -3,7 +3,7 @@ import threading
 
 # from trading_client import TradingClient
 # from trading_client_threading import TradingClient
-from trading_client_orders import TradingClient
+from trading_client_orders_new import TradingClient
 from positions_client import PositionsClient
 from config import settings
 

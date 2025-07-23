@@ -3,13 +3,13 @@ from abc import ABC, abstractmethod
 
 class Algo(ABC):
     @abstractmethod
-    def __init__():
+    def __init__(self):
         pass
 
     @abstractmethod
-    def warmup():
+    def warmup(self):
         pass
 
     @abstractmethod
-    def run():
+    def run(self):
         pass

@@ -487,11 +487,11 @@ class TradingClient(NinjaApiClient):
                     f"FinalVotes: {list(self.finalVotes)}, Signal: {self.signal}"
                 )
 
-    def order(self, price, qty, worker="w"):
+    def order(self, price, qty, exchange=NinjaApiCommon_pb2.Exchange.CME, worker="w"):
         container = NinjaApiMessages_pb2.MsgContainer()
         orderadd = NinjaApiOrderHandling_pb2.OrderAdd()
         orderadd.account = self.account
-        orderadd.contract.exchange = NinjaApiCommon_pb2.Exchange.CME
+        orderadd.contract.exchange = exchange
         orderadd.contract.secDesc = self.product
         orderadd.contract.whName = self.product
         orderadd.timeInForce.type = NinjaApiOrderHandling_pb2.TimeInForce.Type.GTC
