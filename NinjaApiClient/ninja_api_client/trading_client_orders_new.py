@@ -9,20 +9,11 @@ import NinjaApiSheets_pb2
 import NinjaApiCommon_pb2
 import NinjaApiOrderHandling_pb2
 
+from datetime import datetime
 import logging
 import time
-
-from HELPERS import TradingLogger
-
-# USER IMPORTS
-from datetime import time as datetimeTime
-from datetime import datetime, timedelta
-from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
-from collections import deque
-import pandas as pd
-import numpy as np
 import threading
+from HELPERS import TradingLogger
 
 
 class TradingClient(NinjaApiClient):
@@ -30,12 +21,13 @@ class TradingClient(NinjaApiClient):
     def __init__(self):
         super().__init__(settings.trading_host, settings.trading_port)
         self.logger = TradingLogger()
-        self.products = ["NQU5"]
-        self.latest_trade_price = {product: None for product in self.products}
-        self.latest_bid = {product: None for product in self.products}
-        self.latest_ask = {product: None for product in self.products}
-        self.latest_low = {product: None for product in self.products}
-        self.latest_high = {product: None for product in self.products}
+        cme = NinjaApiCommon_pb2.Exchange.CME
+        self.products = {"NQU5": cme}
+        self.latest_trade_price = {product: None for product in self.products.keys()}
+        self.latest_bid = {product: None for product in self.products.keys()}
+        self.latest_ask = {product: None for product in self.products.keys()}
+        self.latest_low = {product: None for product in self.products.keys()}
+        self.latest_high = {product: None for product in self.products.keys()}
 
     """
     Get latest bid
@@ -44,7 +36,10 @@ class TradingClient(NinjaApiClient):
     """
 
     def get_bid(self, product):
-        return self.latest_bid.get(product)
+        while True:
+            bid = self.latest_bid.get(product)
+            if bid is not None:
+                return bid
 
     """
     Get latest ask
@@ -53,7 +48,10 @@ class TradingClient(NinjaApiClient):
     """
 
     def get_ask(self, product):
-        return self.latest_ask.get(product)
+        while True:
+            ask = self.latest_ask.get(product)
+            if ask is not None:
+                return ask
 
     """
     Get latest high
@@ -62,7 +60,10 @@ class TradingClient(NinjaApiClient):
     """
 
     def get_high(self, product):
-        return self.latest_high.get(product)
+        while True:
+            high = self.latest_high.get(product)
+            if high is not None:
+                return high
 
     """
     Get latest low
@@ -71,16 +72,22 @@ class TradingClient(NinjaApiClient):
     """
 
     def get_low(self, product):
-        return self.latest_low.get(product)
+        while True:
+            low = self.latest_low.get(product)
+            if low is not None:
+                return low
 
-    """
+        """
     Get latest traded price
     Parameters:
         product (str): The symbol or product name being traded (e.g., 'ESU5').
     """
 
     def get_trade_price(self, product):
-        return self.latest_trade_price.get(product)
+        while True:
+            trade_price = self.latest_trade_price.get(product)
+            if trade_price is not None:
+                return trade_price
 
     """
     Submit an order to the specified exchange.
@@ -128,7 +135,7 @@ class TradingClient(NinjaApiClient):
         if log:
             # log the trade in txt
             self.logger.log_trade(
-                self.currentTime.time(),
+                datetime.now().time(),
                 price,
                 qty,
                 tag,
@@ -165,7 +172,7 @@ class TradingClient(NinjaApiClient):
         container.header.msgType = NinjaApiMessages_pb2.Header.CANCEL_ALL_ORDERS_REQUEST
         container.payload = ordercancel.SerializeToString()
         self.send_msg(container)
-        self.order(account, product, price, qty)
+        self.order(account, product, price, qty, tag=tag, log=log)
 
     def run(self):
         # region LOGIN
@@ -191,7 +198,7 @@ class TradingClient(NinjaApiClient):
         self.send_msg(container)
         container.header.msgType = NinjaApiMessages_pb2.Header.PRICE_FEED_STATUS_REQUEST
         self.send_msg(container)
-        sheets = NinjaApiSheets_pb2.GetSheets()
+        sheets = NinjaApiSheets_pb2.Sheets()
         container.header.msgType = NinjaApiMessages_pb2.Header.SHEETS_REQUEST
         container.payload = sheets.SerializeToString()
         self.send_msg(container)
@@ -199,9 +206,9 @@ class TradingClient(NinjaApiClient):
         ##________________________________________________________________________________
         # region START MARKET DATA
         startmd = NinjaApiMarketData_pb2.StartMarketData()
-        for product in self.products:
+        for product in self.products.keys():
             contract = startmd.contracts.add()
-            contract.exchange = NinjaApiCommon_pb2.Exchange.CME
+            contract.exchange = self.products.get(product)
             contract.secDesc = product
             contract.whName = product
         startmd.cadence.duration = 0  # in milliseconds
@@ -210,11 +217,24 @@ class TradingClient(NinjaApiClient):
         container.header.msgType = NinjaApiMessages_pb2.Header.START_MARKET_DATA_REQUEST
         container.payload = startmd.SerializeToString()
         self.send_msg(container)
-
+        # self.not_bought = True
         while self.connected:
             msg = self.recv_msg()
             if not msg:
                 continue
+
+            # if self.not_bought and self.latest_trade_price.get("NQU5") is not None:
+            #     self.order(
+            #         "FW077",
+            #         "NQU5",
+            #         self.latest_trade_price.get("NQU5"),
+            #         1,
+            #         worker="w",
+            #         exchange=NinjaApiCommon_pb2.Exchange.CME,
+            #         tag="TEST",
+            #         log=True,
+            #     )
+            #     self.not_bought = False
             # ________________________________________________________________________________
             # region ON EVERY MARKET UPDATE
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.MARKET_UPDATES:
@@ -247,12 +267,11 @@ class TradingClient(NinjaApiClient):
                         self.latest_bid[product] = update.tobUpdate.bidPrice
                         self.latest_ask[product] = update.tobUpdate.askPrice
 
-                logging.info(f"trade_price: {self.latest_trade_price}")
-                logging.info(f"bid: {self.latest_bid}")
-                logging.info(f"ask: {self.latest_ask}")
-                logging.info(f"low: {self.latest_low}")
-                logging.info(f"high: {self.latest_high}")
-
+                # logging.info(f"trade_price: {self.latest_trade_price}")
+                # logging.info(f"bid: {self.latest_bid}")
+                # logging.info(f"ask: {self.latest_ask}")
+                # logging.info(f"low: {self.latest_low}")
+                # logging.info(f"high: {self.latest_high}")
             ##________________________________________________________________________________
             # region PRINT AVAILABLE FIELDS
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.ERROR:
