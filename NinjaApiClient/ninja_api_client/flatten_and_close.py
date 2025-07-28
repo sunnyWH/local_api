@@ -24,7 +24,7 @@ def run():
                         qty=-positions.get(entry),
                         worker="w",
                         exchange=exchange,
-                        tag="FLATTEN-ProgramClose",
+                        tag="FLATTEN_PROGRAMCLOSE",
                         log=True,
                     )
                 elif positions.get(entry) < 0:
@@ -35,7 +35,7 @@ def run():
                         qty=-positions.get(entry),
                         worker="w",
                         exchange=exchange,
-                        tag="FLATTEN-ProgramClose",
+                        tag="FLATTEN_PROGRAMCLOSE",
                         log=True,
                     )
 

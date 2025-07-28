@@ -7,216 +7,176 @@ import NinjaApiContracts_pb2
 import NinjaApiMessages_pb2
 import NinjaApiSheets_pb2
 import NinjaApiCommon_pb2
+import NinjaApiOrderHandling_pb2
 
+from datetime import datetime
 import logging
 import time
-
-from HELPERS import TradingLogger
-
-# USER IMPORTS
-from datetime import time as datetimeTime
-from datetime import datetime, timedelta
-from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
-from collections import deque
-import pandas as pd
-import numpy as np
 import threading
+from HELPERS import TradingLogger
 
 
 class TradingClient(NinjaApiClient):
 
     def __init__(self):
         super().__init__(settings.trading_host, settings.trading_port)
-        # CONSTANT PARAMETERS
-        self.product = "NQU5"
-        self.productDiv = 100
-        self.voteDiv = 2
-        self.voteCount = 250
-        self.finalVotesCount = 3
-        self.check1 = 15
-        self.check2 = 25
-        self.check3 = 30
-        self.check4 = 35
-        self.gainLimit = 0.015
-        self.lossLimit = 0.0035
-        self.marketStart = datetimeTime(8, 30)
-        self.marketEnd = datetimeTime(14, 59)
         self.logger = TradingLogger()
-        self.toPrint = True
+        cme = NinjaApiCommon_pb2.Exchange.CME
+        self.products = {"NQU5": cme}
+        self.latest_trade_price = {product: None for product in self.products.keys()}
+        self.latest_bid = {product: None for product in self.products.keys()}
+        self.latest_ask = {product: None for product in self.products.keys()}
+        self.latest_low = {product: None for product in self.products.keys()}
+        self.latest_high = {product: None for product in self.products.keys()}
 
-        # DYNAMIC PARAMETERS
-        self.signal = 0
-        self.signalFlip = 0
-        self.votes = deque(maxlen=self.voteCount)
-        self.finalVotes = deque(maxlen=self.finalVotesCount)
-        self.votesFull = False
-        self.printed = False
-        self.printedClosed = False
-        self.voteTotal = 0
-        self.latestTradePrice = None
-        self.lastPrice = None
-        self.bid = None
-        self.ask = None
-        self.lastTime = None
-        self.currentTime = None
-        self.inMarket = None
-        self.position = 0
-        self.entryPrices = None
-        self.initialTradeTime = None
-        self.gain = None
-        self.loss = None
-        self.pnlCheckCounter = 0
+    """
+    Get latest bid
+    Parameters:
+        product (str): The symbol or product name being traded (e.g., 'ESU5').
+    """
 
-    def user_quits(self):
+    def get_bid(self, product):
         while True:
-            if input("Type 'q' to quit: ").strip().lower() == "q":
-                logging.info("Quit signal received.")
-                container = NinjaApiMessages_pb2.MsgContainer()
-                stopmd = NinjaApiMarketData_pb2.StopMarketData()
-                container.header.msgType = (
-                    NinjaApiMessages_pb2.Header.STOP_MARKET_DATA_REQUEST
-                )
-                self.flatten(self.lastPrice, "PROGRAM_FLATTEN")
-                logging.info("Stopping market connection...")
-                container.payload = stopmd.SerializeToString()
-                self.send_msg(container)
-                logging.info("Disconnecting...")
-                self.disconnect()
+            bid = self.latest_bid.get(product)
+            if bid is not None:
+                return bid
 
-    def warmup(self):
-        engine = create_engine(
-            "postgresql+psycopg2://tickreader:tickreader@tsdb:5432/cme",
-            poolclass=NullPool,  # don't reuse connections — safe for scripts
-            connect_args={"connect_timeout": 5},
-        )
-        query = f"""
-            SELECT wh_name, t_price, sending_time
-            FROM nq_fut_trades_weekly
-            WHERE wh_name = %s
-            ORDER BY sending_time DESC
-            LIMIT 250_000
+    """
+    Get latest ask
+    Parameters:
+        product (str): The symbol or product name being traded (e.g., 'ESU5').
+    """
+
+    def get_ask(self, product):
+        while True:
+            ask = self.latest_ask.get(product)
+            if ask is not None:
+                return ask
+
+    """
+    Get latest high
+    Parameters:
+        product (str): The symbol or product name being traded (e.g., 'ESU5').
+    """
+
+    def get_high(self, product):
+        while True:
+            high = self.latest_high.get(product)
+            if high is not None:
+                return high
+
+    """
+    Get latest low
+    Parameters:
+        product (str): The symbol or product name being traded (e.g., 'ESU5').
+    """
+
+    def get_low(self, product):
+        while True:
+            low = self.latest_low.get(product)
+            if low is not None:
+                return low
+
         """
-        try:
-            with engine.connect() as conn:
-                df = pd.read_sql(query, conn, params=(self.product,))
-        except Exception as e:
-            print("Error:", e)
-        finally:
-            engine.dispose()
-        df.drop(columns=["wh_name"], inplace=True)
-        df["sending_time"] = df["sending_time"].str.replace(
-            r"(\.\d{6})\d+", r"\1", regex=True
-        )
-        df["sending_time"] = pd.to_datetime(
-            df["sending_time"], format="%Y-%m-%d %H:%M:%S.%f %z"
-        )
-        # df["sending_time"] = pd.to_datetime(df["sending_time"])
-        df.index = df["sending_time"]
-        df = df.sort_index()
-        times = df.index.time
-        mask = (times >= pd.to_datetime("08:30").time()) & (
-            times < pd.to_datetime("15:00:03").time()
-        )
-        df = df[mask].copy()
-        df["minute"] = df["sending_time"].dt.floor("min")
-        # mask = df["sending_time"] > df["minute"]
-        # df = df[mask]
-        df = df.loc[df.groupby("minute")["sending_time"].idxmin()]  # last traded price
-        df = df.drop(columns=["sending_time", "minute"])
-        df["t_price"] = df["t_price"] / self.productDiv
-        moves = df["t_price"].diff()
-        time_diff = moves.index.to_series().diff()
-        moves[time_diff > pd.Timedelta(minutes=2)] = 0
-        moves.dropna(inplace=True)
-        for move in moves:
-            self.add_votes(move, toPrint=self.toPrint)
-            self.check_votes_for_final_votes(toPrint=self.toPrint)
-            self.check_signal_from_final_votes(toPrint=self.toPrint)
+    Get latest traded price
+    Parameters:
+        product (str): The symbol or product name being traded (e.g., 'ESU5').
+    """
 
-    def add_votes(self, move, toPrint=False):
-        if not isinstance(move, (int, float)):
-            logging.info(f"Move given is not valid: {move}")
-            return
-        if np.isnan(move):
-            logging.info(f"Move given is NA: {move}")
-            return
-        to_add = int(move / self.voteDiv)
-        if to_add > 0:
-            for i in np.arange(to_add):
-                self.votes.append(1)
-        elif to_add < 0:
-            for i in np.arange(abs(to_add)):
-                self.votes.append(-1)
-        self.voteTotal = sum(self.votes)
-        if toPrint:
-            logging.info(
-                f"Change: {move}, Votes: {to_add}, Total Vote: {self.voteTotal}"
-            )
+    def get_trade_price(self, product):
+        while True:
+            trade_price = self.latest_trade_price.get(product)
+            if trade_price is not None:
+                return trade_price
 
-    def check_votes_for_final_votes(self, toPrint=False):
-        if len(self.votes) == self.voteCount and not self.votesFull:
-            if toPrint:
-                logging.info("Votes Full")
-            self.votesFull = True
-        if self.votesFull:
-            if self.voteTotal > 0:
-                self.finalVotes.append(1)
-            elif self.voteTotal < 0:
-                self.finalVotes.append(-1)
-            else:
-                self.finalVotes.append(0)
+    """
+    Submit an order to the specified exchange.
+    Parameters:
+        account (str): The account identifier to place the order from.
+        product (str): The symbol or product name being traded (e.g., 'ESU5').
+        price (float): The price at which to place the order.
+        qty (int): The number of contracts/shares to trade.
+        worker (str, optional): Identifier for the worker or system submitting the order. Default is "w".
+        exchange (Exchange Enum, optional): The exchange to route the order to (e.g., CME). Default is NinjaApiCommon_pb2.Exchange.CME.
+        tag (str, optional): A custom string for tagging or identifying the order. Default is "".
+        log (bool, optional): Whether to log the order submission. Default is True.
+    Returns:
+        None
+    """
 
-    def check_signal_from_final_votes(self, toPrint=False):
-        if sum(self.finalVotes) == self.finalVotesCount:
-            self.signal = 1
-            if toPrint:
-                logging.info(
-                    f"FinalVotes: {list(self.finalVotes)}, Signal: {self.signal}"
-                )
-        elif sum(self.finalVotes) == -1 * self.finalVotesCount:
-            self.signal = -1
-            if toPrint:
-                logging.info(
-                    f"FinalVotes: {list(self.finalVotes)}, Signal: {self.signal}"
-                )
+    def order(
+        self,
+        account,
+        product,
+        price,
+        qty,
+        worker="w",
+        exchange=NinjaApiCommon_pb2.Exchange.CME,
+        tag="",
+        log=True,
+    ):
+        container = NinjaApiMessages_pb2.MsgContainer()
+        orderadd = NinjaApiOrderHandling_pb2.OrderAdd()
+        orderadd.account = account
+        orderadd.contract.exchange = exchange
+        orderadd.contract.secDesc = product
+        orderadd.contract.whName = product
+        orderadd.timeInForce.type = NinjaApiOrderHandling_pb2.TimeInForce.Type.GTC
+        if qty < 0:
+            orderadd.side = NinjaApiCommon_pb2.Side.SELL
         else:
-            if self.signalFlip != 0:
-                self.signalFlip = 0
-            self.signal = 0
-            if toPrint:
-                logging.info(
-                    f"FinalVotes: {list(self.finalVotes)}, Signal: {self.signal}"
-                )
-
-    def flatten(self, price, tag):
-        if self.position != 0:
+            orderadd.side = NinjaApiCommon_pb2.Side.BUY
+        orderadd.qty = abs(qty)
+        orderadd.price = price
+        orderadd.prefix = worker
+        container.header.msgType = NinjaApiMessages_pb2.Header.ORDER_ADD_REQUEST
+        container.payload = orderadd.SerializeToString()
+        self.send_msg(container)
+        if log:
+            # log the trade in txt
             self.logger.log_trade(
-                self.currentTime.time(),
+                datetime.now().time(),
                 price,
-                -self.position,
+                qty,
+                account,
                 tag,
             )
-        else:
-            logging.info("Flatten attempted, position already 0")
-        self.initialTradeTime = None
-        self.gain = None
-        self.loss = None
-        self.position = 0
-        self.pnlCheckCounter = 0
 
-    def tickRound(self, num, div=4):
-        return round(num * div) / div
+    """
+    Cancels ALL working orders and submits market order to flatten at the specifed price. 
+    Parameters:
+        account (str): The account identifier to place the order from.
+        product (str): The symbol or product name being traded (e.g., 'ESU5').
+        price (float): The price at which to place the order.
+        qty (int): The number of contracts/shares to trade.
+        worker (str, optional): Identifier for the worker or system submitting the order. Default is "w".
+        exchange (Exchange Enum, optional): The exchange to route the order to (e.g., CME). Default is NinjaApiCommon_pb2.Exchange.CME.
+        tag (str, optional): A custom string for tagging or identifying the order. Default is "".
+        log (bool, optional): Whether to log the order submission. Default is True.
+    Returns:
+        None
+    """
+
+    def flatten(
+        self,
+        account,
+        product,
+        price,
+        qty,
+        worker="w",
+        exchange=NinjaApiCommon_pb2.Exchange.CME,
+        tag="",
+        log=True,
+    ):
+        container = NinjaApiMessages_pb2.MsgContainer()
+        ordercancel = NinjaApiOrderHandling_pb2.CancelAllOrders()
+        container.header.msgType = NinjaApiMessages_pb2.Header.CANCEL_ALL_ORDERS_REQUEST
+        container.payload = ordercancel.SerializeToString()
+        self.send_msg(container)
+        self.order(account, product, price, qty, tag=tag, log=log)
 
     def run(self):
-        ##________________________________________________________________________________
-        ## WARMUP
-        self.warmup()
-        ##________________________________________________________________________________
-        ## USER INPUT
-        threading.Thread(target=self.user_quits, daemon=True).start()
-        ##________________________________________________________________________________
-        ## LOGIN
+        # region LOGIN
         login = NinjaApiMessages_pb2.Login()
         login.user = settings.trading_user
         login.password = settings.trading_password
@@ -227,8 +187,9 @@ class TradingClient(NinjaApiClient):
         container.header.version = "v1.0.0"
         container.payload = login.SerializeToString()
         self.send_msg(container)
+
         ##________________________________________________________________________________
-        ## REQUEST AVAILABLE FIELDS
+        # region REQUEST AVAILABLE FIELDS
         container.header.msgType = NinjaApiMessages_pb2.Header.NINJA_REQUEST
         container.payload = b""
         self.send_msg(container)
@@ -238,388 +199,82 @@ class TradingClient(NinjaApiClient):
         self.send_msg(container)
         container.header.msgType = NinjaApiMessages_pb2.Header.PRICE_FEED_STATUS_REQUEST
         self.send_msg(container)
-        sheets = NinjaApiSheets_pb2.GetSheets()
+        sheets = NinjaApiSheets_pb2.Sheets()
         container.header.msgType = NinjaApiMessages_pb2.Header.SHEETS_REQUEST
         container.payload = sheets.SerializeToString()
         self.send_msg(container)
+
         ##________________________________________________________________________________
-        ## START MARKET DATA
+        # region START MARKET DATA
         startmd = NinjaApiMarketData_pb2.StartMarketData()
-        contract = startmd.contracts.add()
-        contract.exchange = NinjaApiCommon_pb2.Exchange.CME
-        contract.secDesc = self.product
-        contract.whName = self.product
+        for product in self.products.keys():
+            contract = startmd.contracts.add()
+            contract.exchange = self.products.get(product)
+            contract.secDesc = product
+            contract.whName = product
         startmd.cadence.duration = 0  # in milliseconds
         startmd.includeImplieds = True
         startmd.includeTradeUpdates = True
         container.header.msgType = NinjaApiMessages_pb2.Header.START_MARKET_DATA_REQUEST
         container.payload = startmd.SerializeToString()
         self.send_msg(container)
-
-        hb_count = 0
+        # self.not_bought = True
         while self.connected:
-            # GET THE CORRECT TIMES
-            self.currentTime = datetime.now()
-            if (
-                self.marketStart <= self.currentTime.time() <= self.marketEnd
-                and not self.printed
-            ):
-                logging.info(f"In Market Hours")
-                self.printed = True
-                self.printedClosed = False
-                self.inMarket = True
-            if (
-                not self.marketStart <= self.currentTime.time() <= self.marketEnd
-                and not self.printedClosed
-            ):
-                logging.info(f"Outside of Market Hours, flattening...")
-                self.flatten(self.latestTradePrice, "MARKET_FLATTEN")
-                self.signalFlip = 0
-                self.printed = False
-                self.printedClosed = True
-                self.inMarket = False
-
-            if self.inMarket:
-                if self.lastTime is None:
-                    self.lastTime = self.currentTime.replace(second=0, microsecond=0)
-
             msg = self.recv_msg()
             if not msg:
                 continue
-            # logging.info(
-            #     "Received "
-            #     + NinjaApiMessages_pb2.Header.MsgType.Name(msg.header.msgType)
-            # )
-            if msg.header.msgType == NinjaApiMessages_pb2.Header.HEARTBEAT:
-                hb_count += 1
-                # if hb_count == 2:
-                #     break  # Exit loop after receiving 3 heartbeats
+
+            # if self.not_bought and self.latest_trade_price.get("NQU5") is not None:
+            #     self.order(
+            #         "FW077",
+            #         "NQU5",
+            #         self.latest_trade_price.get("NQU5"),
+            #         1,
+            #         worker="w",
+            #         exchange=NinjaApiCommon_pb2.Exchange.CME,
+            #         tag="TEST",
+            #         log=True,
+            #     )
+            #     self.not_bought = False
             # ________________________________________________________________________________
-            ## ON EVERY MARKET UPDATE
+            # region ON EVERY MARKET UPDATE
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.MARKET_UPDATES:
                 resp = NinjaApiMarketData_pb2.MarketUpdates()
                 resp.ParseFromString(msg.payload)
                 for update in resp.marketUpdates:
+                    product = update.contract.secDesc
                     if len(update.tradeUpdates) > 0:
-                        latestTrade = update.tradeUpdates[-1]
-                        self.latestTradePrice = latestTrade.tradePrice / self.productDiv
-                        self.bid = update.tobUpdate.bidPrice / self.productDiv
-                        self.ask = update.tobUpdate.askPrice / self.productDiv
-                        if self.inMarket:
-                            # check gains and stops at every update on bid/ask
-                            if self.position > 0:
-                                if self.bid > self.gain:
-                                    logging.info(
-                                        f"GAIN HIT: {-self.position}, {self.gain}"
-                                    )
-                                    self.flatten(self.gain, "GAIN_FLATTEN")
-                                    self.signalFlip = 0
-                                elif self.ask < self.loss:
-                                    logging.info(
-                                        f"LOSS HIT: {-self.position}, {self.loss}"
-                                    )
-                                    if abs(self.position) != 1:
-                                        self.signalFlip = 0
-                                    self.flatten(self.loss, "LOSS_FLATTEN")
-                            elif self.position < 0:
-                                if self.ask < self.gain:
-                                    logging.info(
-                                        f"GAIN HIT: {-self.position}, {self.gain}"
-                                    )
-                                    self.flatten(self.gain, "GAIN_FLATTEN")
-                                    self.signalFlip = 0
-                                elif self.bid > self.loss:
-                                    logging.info(
-                                        f"LOSS HIT: {-self.position}, {self.loss}"
-                                    )
-                                    if abs(self.position) != 1:
-                                        self.signalFlip = 0
-                                    self.flatten(self.loss, "LOSS_FLATTEN")
+                        high = None
+                        low = None
+                        if len(update.tradeUpdates) == 1:
+                            high = update.tradeUpdates[0].tradePrice
+                            low = update.tradeUpdates[0].tradePrice
+                        else:
+                            for trade in update.tradeUpdates:
+                                if high is None:
+                                    high = trade.tradePrice
+                                elif trade.tradePrice > high:
+                                    high = trade.tradePrice
+                                if low is None:
+                                    low = trade.tradePrice
+                                elif trade.tradePrice < low:
+                                    low = trade.tradePrice
 
-                            # EVERY TOP OF THE MINUTE...
-                            if self.currentTime > self.lastTime + timedelta(seconds=60):
-                                logging.info(f"Contract: {update.contract.secDesc}")
-                                logging.info(
-                                    f"Bid Qty: {update.tobUpdate.bidQty} | Bid: {update.tobUpdate.bidPrice} | Ask: {update.tobUpdate.askPrice} | Ask Qty: {update.tobUpdate.askQty}"
-                                )
-                                if self.lastPrice is None:
-                                    self.lastPrice = self.latestTradePrice
-                                    logging.info(
-                                        f"Established Latest Price: {self.latestTradePrice}"
-                                    )
-                                else:
-                                    move = self.latestTradePrice - self.lastPrice
-                                    self.add_votes(move, toPrint=self.toPrint)
-                                    self.check_votes_for_final_votes(
-                                        toPrint=self.toPrint
-                                    )
-                                    self.check_signal_from_final_votes(
-                                        toPrint=self.toPrint
-                                    )
-                                    self.lastPrice = self.latestTradePrice
-                                logging.info(f"Latest Price: {self.latestTradePrice}")
+                        self.latest_trade_price[product] = update.tradeUpdates[
+                            -1
+                        ].tradePrice
+                        self.latest_high[product] = high
+                        self.latest_low[product] = low
+                        self.latest_bid[product] = update.tobUpdate.bidPrice
+                        self.latest_ask[product] = update.tobUpdate.askPrice
 
-                                # DIFFERENT LOGIC BASED ON DIFFERENT POSITIONS
-                                # signal flip, if we have any position, flatten
-                                if (
-                                    self.position * self.signal <= 0
-                                    and self.position != 0
-                                ):
-                                    if self.position > 0:
-                                        self.logger.log_trade(
-                                            self.currentTime.time(),
-                                            self.bid,
-                                            -self.position,
-                                            "EXIT-SIGNAL",
-                                        )
-                                        self.position = 0
-                                    if self.position < 0:
-                                        self.logger.log_trade(
-                                            self.currentTime.time(),
-                                            self.ask,
-                                            -self.position,
-                                            "EXIT-SIGNAL",
-                                        )
-                                        self.position = 0
-
-                                # start trade if position 0 and signalFlip is reset
-                                elif self.position == 0:
-                                    if (
-                                        self.signal == -1
-                                        and self.signalFlip != self.signal
-                                    ):
-                                        self.logger.log_trade(
-                                            self.currentTime.time(),
-                                            self.bid,
-                                            -1,
-                                            "START_SELL",
-                                        )
-                                        self.position = -1
-                                        self.signalFlip = -1
-                                        self.entryPrices = [self.bid]
-                                        self.initialTradeTime = (
-                                            self.currentTime.replace(
-                                                second=0, microsecond=0
-                                            )
-                                        )
-                                        self.gain = self.tickRound(
-                                            self.latestTradePrice * (1 - self.gainLimit)
-                                        )
-                                        self.loss = self.tickRound(
-                                            self.latestTradePrice * (1 + self.lossLimit)
-                                        )
-                                    elif (
-                                        self.signal == 1
-                                        and self.signalFlip != self.signal
-                                    ):
-                                        self.logger.log_trade(
-                                            self.currentTime.time(),
-                                            self.ask,
-                                            1,
-                                            "START_BUY",
-                                        )
-                                        self.position = 1
-                                        self.signalFlip = 1
-                                        self.entryPrices = [self.ask]
-                                        self.initialTradeTime = (
-                                            self.currentTime.replace(
-                                                second=0, microsecond=0
-                                            )
-                                        )
-                                        self.gain = self.tickRound(
-                                            self.latestTradePrice * (1 + self.gainLimit)
-                                        )
-                                        self.loss = self.tickRound(
-                                            self.latestTradePrice * (1 - self.lossLimit)
-                                        )
-
-                                # position is positive, do our adding checks
-                                elif self.position > 0:
-                                    if (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check4 * 60)
-                                    ):
-                                        self.pnlCheckCounter = 5
-                                        if self.pnlCheckCounter != self.position:
-                                            if (
-                                                np.mean(self.entryPrices)
-                                                > self.latestTradePrice
-                                            ):
-                                                self.signalFlip = 0
-                                                self.flatten(self.bid, "PNL5_FLATTEN")
-                                            elif self.position < 5:
-                                                last_pos = self.position
-                                                self.position += 1
-                                                self.logger.log_trade(
-                                                    self.currentTime.time(),
-                                                    self.ask,
-                                                    self.position - last_pos,
-                                                    "ADD5_BUY",
-                                                )
-                                    elif (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check3 * 60)
-                                    ):
-                                        self.pnlCheckCounter = 4
-                                        if self.pnlCheckCounter != self.position:
-                                            if (
-                                                np.mean(self.entryPrices)
-                                                > self.latestTradePrice
-                                            ):
-                                                self.signalFlip = 0
-                                                self.flatten(self.bid, "PNL4_FLATTEN")
-                                            elif self.position < 4:
-                                                last_pos = self.position
-                                                self.position += 1
-                                                self.logger.log_trade(
-                                                    self.currentTime.time(),
-                                                    self.ask,
-                                                    self.position - last_pos,
-                                                    "ADD4_BUY",
-                                                )
-                                    elif (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check2 * 60)
-                                    ):
-                                        self.pnlCheckCounter = 3
-                                        if self.pnlCheckCounter != self.position:
-                                            if (
-                                                np.mean(self.entryPrices)
-                                                > self.latestTradePrice
-                                            ):
-                                                self.signalFlip = 0
-                                                self.flatten(self.bid, "PNL3_FLATTEN")
-                                            elif self.position < 3:
-                                                last_pos = self.position
-                                                self.position += 1
-                                                self.logger.log_trade(
-                                                    self.currentTime.time(),
-                                                    self.ask,
-                                                    self.position - last_pos,
-                                                    "ADD3_BUY",
-                                                )
-                                    elif (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check1 * 60)
-                                    ):
-                                        self.pnlCheckCounter = 2
-                                        if self.pnlCheckCounter != self.position:
-                                            if (
-                                                np.mean(self.entryPrices)
-                                                > self.latestTradePrice
-                                            ):
-                                                self.flatten(self.bid, "PNL2_FLATTEN")
-                                            elif self.position < 2:
-                                                last_pos = self.position
-                                                self.position += 1
-                                                self.logger.log_trade(
-                                                    self.currentTime.time(),
-                                                    self.ask,
-                                                    self.position - last_pos,
-                                                    "ADD2_BUY",
-                                                )
-
-                                # position is negative, do our adding checks
-                                elif self.position < 0:
-                                    if (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check4 * 60)
-                                    ):
-                                        self.pnlCheckCounter = -5
-                                        if self.pnlCheckCounter != self.position:
-                                            if (
-                                                np.mean(self.entryPrices)
-                                                < self.latestTradePrice
-                                            ):
-                                                self.signalFlip = 0
-                                                self.flatten(self.ask, "PNL5_FLATTEN")
-                                            elif self.position > -5:
-                                                last_pos = self.position
-                                                self.position -= 1
-                                                self.logger.log_trade(
-                                                    self.currentTime.time(),
-                                                    self.bid,
-                                                    self.position - last_pos,
-                                                    "ADD5_SELL",
-                                                )
-                                    elif (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check3 * 60)
-                                    ):
-                                        self.pnlCheckCounter = -4
-                                        if self.pnlCheckCounter != self.position:
-                                            if (
-                                                np.mean(self.entryPrices)
-                                                < self.latestTradePrice
-                                            ):
-                                                self.signalFlip = 0
-                                                self.flatten(self.ask, "PNL4_FLATTEN")
-                                            elif self.position > -4:
-                                                last_pos = self.position
-                                                self.position -= 1
-                                                self.logger.log_trade(
-                                                    self.currentTime.time(),
-                                                    self.bid,
-                                                    self.position - last_pos,
-                                                    "ADD4_SELL",
-                                                )
-                                    elif (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check2 * 60)
-                                    ):
-                                        self.pnlCheckCounter = -3
-                                        if self.pnlCheckCounter != self.position:
-                                            if (
-                                                np.mean(self.entryPrices)
-                                                < self.latestTradePrice
-                                            ):
-                                                self.signalFlip = 0
-                                                self.flatten(self.ask, "PNL3_FLATTEN")
-                                            elif self.position > -3:
-                                                last_pos = self.position
-                                                self.position -= 1
-                                                self.logger.log_trade(
-                                                    self.currentTime.time(),
-                                                    self.bid,
-                                                    self.position - last_pos,
-                                                    "ADD3_SELL",
-                                                )
-                                    elif (
-                                        self.currentTime
-                                        > self.initialTradeTime
-                                        + timedelta(seconds=self.check1 * 60)
-                                    ):
-                                        self.pnlCheckCounter = -2
-                                        if self.pnlCheckCounter != self.position:
-                                            if (
-                                                np.mean(self.entryPrices)
-                                                < self.latestTradePrice
-                                            ):
-                                                self.flatten(self.ask, "PNL2_FLATTEN")
-                                            elif self.position > -2:
-                                                last_pos = self.position
-                                                self.position -= 1
-                                                self.logger.log_trade(
-                                                    self.currentTime.time(),
-                                                    self.bid,
-                                                    self.position - last_pos,
-                                                    "ADD2_SELL",
-                                                )
-
-                                # update our last time
-                                self.lastTime = self.currentTime.replace(
-                                    second=0, microsecond=0
-                                )
-
+                # logging.info(f"trade_price: {self.latest_trade_price}")
+                # logging.info(f"bid: {self.latest_bid}")
+                # logging.info(f"ask: {self.latest_ask}")
+                # logging.info(f"low: {self.latest_low}")
+                # logging.info(f"high: {self.latest_high}")
             ##________________________________________________________________________________
-            ## PRINT AVAILABLE FIELDS
+            # region PRINT AVAILABLE FIELDS
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.ERROR:
                 error = NinjaApiMessages_pb2.Error()
                 error.ParseFromString(msg.payload)
@@ -763,6 +418,15 @@ class TradingClient(NinjaApiClient):
                     logging.info(
                         f"Security status for {secStatus.contract.secDesc} is {NinjaApiMarketData_pb2.SecurityStatus.Status.Name(secStatus.status)}"
                     )
+            elif msg.header.msgType == NinjaApiMessages_pb2.Header.ORDER_ADD_FAILURE:
+                resp = NinjaApiOrderHandling_pb2.OrderAddFailure()
+                resp.ParseFromString(msg.payload)
+                logging.info(
+                    f"Received order add failure for {resp.contract.secDesc} "
+                    f"with order number ({resp.orderNo}). "
+                    f"Error code: {resp.errorCode}. "
+                    f'Reason: ("{resp.reason}").'
+                )
             time.sleep(0.01)
 
         self.disconnect()

@@ -11,7 +11,7 @@ class TradingLogger:
         self._ensure_file_exists()
 
     def _get_filename(self, date_obj):
-        return f"{date_obj}_trading_results.csv"
+        return f"trades/{date_obj}.csv"
 
     def _ensure_file_exists(self):
         # If file doesn't exist, create it with header
@@ -20,7 +20,7 @@ class TradingLogger:
                 writer = csv.writer(f)
                 writer.writerow(["time", "price", "quantity"])
 
-    def log_trade(self, time, price, quantity, strategy="", notes=""):
+    def log_trade(self, time, price, quantity, account="", tag=""):
         now = datetime.now()
         today = now.date()
         if today != self.current_date:
@@ -31,5 +31,5 @@ class TradingLogger:
 
         with open(self.filename, mode="a", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow([time, strategy, price, quantity, notes])
-            logging.info(f"Logged trade: {strategy}, {price}, {quantity}, {notes}")
+            writer.writerow([time, price, quantity, account, tag])
+            logging.info(f"Logged trade: {price}, {quantity}, {account}, {tag}")

@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 
 
-class Monkey(Algo):
+class RB(Algo):
     def __init__(self):
         # CONSTANT PARAMETERS
         self.account = "FW078"

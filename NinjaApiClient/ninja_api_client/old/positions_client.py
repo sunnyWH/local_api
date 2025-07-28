@@ -5,6 +5,7 @@ import NinjaApiCommon_pb2
 import NinjaApiContracts_pb2
 import NinjaApiMessages_pb2
 import NinjaApiPositions_pb2
+import NinjaApiOrderHandling_pb2
 
 
 from ninja_api_client import NinjaApiClient
@@ -16,22 +17,9 @@ from datetime import datetime, timedelta
 class PositionsClient(NinjaApiClient):
     def __init__(self):
         super().__init__(settings.positions_host, settings.positions_port)
-        cme = NinjaApiCommon_pb2.Exchange.CME
-        self.products = {"NQU5": cme}
-        self.accounts = ["FW077"]
         # DYNAMIC
         self.lastTime = datetime.now().replace(second=0, microsecond=80_000)
-        self.positions = {}
-
-    """ 
-    Gets positions of specified contract(s) for account(s)
-    Parameters:
-        accounts (lst): List of the account identifiers 
-        contractFilters (lst): List of the symbol(s) or product(s) name being traded (e.g., ['ESU5']).
-        includeSpec (bool, optional): Whether to include speculative trades or not (mainly used for options). Default is False
-    Returns:
-        None, sends message for position request
-    """
+        self.contract = None
 
     def get_positions(self, accounts, contractFilters, includeSpec=False):
         getPositions = NinjaApiPositions_pb2.GetPositions()
@@ -44,19 +32,20 @@ class PositionsClient(NinjaApiClient):
         container.payload = getPositions.SerializeToString()
         self.send_msg(container)
 
-    """ 
-    Gets positions of all contracts on all accounts
-    Returns:
-        None, sends multiple messages for position request
-    """
+    def user_quits(self):
+        while True:
+            if input().strip().lower() == "q":
+                logging.info("POSITIONS_CLIENT: Disconnecting...")
+                self.disconnect()
 
-    def get_all_positions(self):
-        for account in self.accounts:
-            for product in self.products.keys():
-                contract = NinjaApiContracts_pb2.Contract()
-                contract.exchange = self.products.get(product)
-                contract.secDesc = product
-                self.get_positions([account], [contract])
+    def check_pos(self):
+        while True:
+            if (
+                datetime.now() > self.lastTime + timedelta(seconds=60)
+                and self.contract is not None
+            ):
+                self.get_positions(["FW077"], [self.contract])
+                self.lastTime = datetime.now().replace(second=0, microsecond=80_000)
 
     def run(self):
         login = NinjaApiMessages_pb2.Login()
@@ -69,42 +58,34 @@ class PositionsClient(NinjaApiClient):
         container.header.version = "v1.0.0"
         container.payload = login.SerializeToString()
         self.send_msg(container)
+        ##________________________________________________________________________________
+        ## USER INPUT
+        threading.Thread(target=self.user_quits, daemon=True).start()
+        ##________________________________________________________________________________
+        ## TRADE LOGIC
+        threading.Thread(target=self.check_pos, daemon=True).start()
 
         while self.connected:
             msg = self.recv_msg()
             if not msg:
-                if (
-                    datetime.now() > self.lastTime + timedelta(seconds=60)
-                    and len(self.products) > 0
-                    and len(self.accounts) > 0
-                ):
-                    self.get_all_positions()
-                    self.lastTime = datetime.now().replace(second=0, microsecond=80_000)
-                else:
-                    continue
-            elif msg.header.msgType == NinjaApiMessages_pb2.Header.LOGIN_RESPONSE:
+                continue
+            if msg.header.msgType == NinjaApiMessages_pb2.Header.LOGIN_RESPONSE:
                 resp = NinjaApiMessages_pb2.LoginResponse()
                 resp.ParseFromString(msg.payload)
-                self.get_all_positions()
+                contract = NinjaApiContracts_pb2.Contract()
+                contract.exchange = NinjaApiCommon_pb2.Exchange.CME
+                contract.secDesc = "NQU5"
+                self.contract = contract
+                self.get_positions(["FW077"], [self.contract])
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.POSITIONS_RESPONSE:
                 resp = NinjaApiPositions_pb2.Positions()
                 resp.ParseFromString(msg.payload)
                 for position in resp.positions:
-                    logging.info(
-                        f"{position.account}, {position.contract.exchange}, {position.contract.secDesc}: {position.totalPos}"
-                    )
-                    self.positions[
-                        (
-                            position.account,
-                            position.contract.exchange,
-                            position.contract.secDesc,
-                        )
-                    ] = position.totalPos
+                    logging.info(f"{position.contract.secDesc}: {position.totalPos}")
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.ERROR:
                 error = NinjaApiMessages_pb2.Error()
                 error.ParseFromString(msg.payload)
                 logging.info(error.msg)
-
             time.sleep(0.01)
 
         self.disconnect()
