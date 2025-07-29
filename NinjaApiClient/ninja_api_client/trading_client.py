@@ -28,6 +28,7 @@ class TradingClient(NinjaApiClient):
         self.latest_ask = {product: None for product in self.products.keys()}
         self.latest_low = {product: None for product in self.products.keys()}
         self.latest_high = {product: None for product in self.products.keys()}
+        self.latest_volume = {product: 0 for product in self.products.keys()}
 
     """
     Get latest bid
@@ -88,6 +89,18 @@ class TradingClient(NinjaApiClient):
             trade_price = self.latest_trade_price.get(product)
             if trade_price is not None:
                 return trade_price
+
+    """
+    Get volume of this trade update (since turninig on the connection, warmup for day will have to be done on algo side)
+    Parameters:
+        product (str): The symbol or product name being traded (e.g., 'ESU5').
+    """
+
+    def get_volume(self, product):
+        while True:
+            volume = self.latest_volume.get(product)
+            if volume != 0:
+                return volume
 
     """
     Submit an order to the specified exchange.
@@ -246,9 +259,11 @@ class TradingClient(NinjaApiClient):
                     if len(update.tradeUpdates) > 0:
                         high = None
                         low = None
+                        volume = 0
                         if len(update.tradeUpdates) == 1:
                             high = update.tradeUpdates[0].tradePrice
                             low = update.tradeUpdates[0].tradePrice
+                            volume = update.tradeUpdates[0].tradeQty
                         else:
                             for trade in update.tradeUpdates:
                                 if high is None:
@@ -259,6 +274,7 @@ class TradingClient(NinjaApiClient):
                                     low = trade.tradePrice
                                 elif trade.tradePrice < low:
                                     low = trade.tradePrice
+                                volume += trade.tradeQty
 
                         self.latest_trade_price[product] = update.tradeUpdates[
                             -1
@@ -267,6 +283,7 @@ class TradingClient(NinjaApiClient):
                         self.latest_low[product] = low
                         self.latest_bid[product] = update.tobUpdate.bidPrice
                         self.latest_ask[product] = update.tobUpdate.askPrice
+                        self.latest_volume[product] += volume
 
                 # logging.info(f"trade_price: {self.latest_trade_price}")
                 # logging.info(f"bid: {self.latest_bid}")

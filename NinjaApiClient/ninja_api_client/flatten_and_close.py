@@ -2,7 +2,7 @@ import clients
 import logging
 import time
 
-from clients import algoMonkey
+# from clients import algoMonkey, algoRB
 
 
 def run():
@@ -51,8 +51,12 @@ def run():
             else:
                 logging.warning("TRADING_CLIENT not set!")
 
-            clients.algoMonkey.disconnect()
-            logging.info("ALGO_MONKEY: Disconnecting...")
+            if clients.algoMonkey is not None:
+                clients.algoMonkey.disconnect()
+                logging.info("ALGO_MONKEY: Disconnecting...")
+            if clients.algoRB is not None:
+                clients.algoRB.disconnect()
+                logging.info("ALGO_RB: Disconnecting...")
 
             logging.info("FLATTEN_CLIENT: Disconnecting...")
 

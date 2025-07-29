@@ -39,10 +39,11 @@ def run_clients():
     thread = threading.Thread(target=clients.algoMonkey.run, daemon=True)
     thread.start()
     threads.append(thread)
-    # clients.algoRB = algo_rangebreakout.RB()
-    # thread = threading.Thread(target=clients.algoRB.run, daemon=True)
-    # thread.start()
-    # threads.append(thread)
+
+    clients.algoRB = algo_rangebreakout.RB()
+    thread = threading.Thread(target=clients.algoRB.run, daemon=True)
+    thread.start()
+    threads.append(thread)
 
     # ADD FLATTEN
     thread = threading.Thread(target=flatten_and_close.run, daemon=True)

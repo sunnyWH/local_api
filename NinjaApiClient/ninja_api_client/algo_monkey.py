@@ -1,6 +1,7 @@
 import clients
 import logging
 from algo_interface import Algo
+import time
 
 # USER IMPORTS
 from datetime import time as datetimeTime
@@ -15,7 +16,7 @@ import numpy as np
 class Monkey(Algo):
     def __init__(self):
         # CONSTANT PARAMETERS
-        self.account = "FW078"
+        self.account = "FW077"
         self.product = "NQU5"
         self.productDiv = 100
         self.voteDiv = 2
@@ -83,17 +84,14 @@ class Monkey(Algo):
         df["sending_time"] = pd.to_datetime(
             df["sending_time"], format="%Y-%m-%d %H:%M:%S.%f %z"
         )
-        # df["sending_time"] = pd.to_datetime(df["sending_time"])
         df.index = df["sending_time"]
         df = df.sort_index()
         times = df.index.time
         mask = (times >= pd.to_datetime("08:30").time()) & (
-            times < pd.to_datetime("15:00:03").time()
+            times <= pd.to_datetime("15:00").time()
         )
         df = df[mask].copy()
         df["minute"] = df["sending_time"].dt.floor("min")
-        # mask = df["sending_time"] > df["minute"]
-        # df = df[mask]
         df = df.loc[df.groupby("minute")["sending_time"].idxmin()]  # last traded price
         df = df.drop(columns=["sending_time", "minute"])
         df["t_price"] = df["t_price"] / self.productDiv
@@ -153,6 +151,7 @@ class Monkey(Algo):
                     self.printed = False
                     self.printedClosed = True
                     self.inMarket = False
+                    self.disconnect()
 
                 else:
                     # check gains and stops at every update on bid/ask
@@ -426,8 +425,8 @@ class Monkey(Algo):
                             second=0, microsecond=0
                         )
 
-                        # # start active waiting after 58.5 seconds
-                        # time.sleep(58.5)
+                        # add a sleep for CPU
+                        time.sleep(0.1)
 
     # region HELPERS
     def order(
