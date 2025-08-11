@@ -21,7 +21,7 @@ class RB(Algo):
         self.product = "NQU5"
         self.productDiv = 100
         self.volumeThreshold = 100_000
-        self.rangeThreshold = 100
+        self.rangeThreshold = 150
         self.volThreshold = 0.0025
         self.volMaxThreshold = 0.002
         self.tickMinThreshold = 4
