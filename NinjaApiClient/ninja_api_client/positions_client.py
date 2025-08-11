@@ -19,11 +19,13 @@ class PositionsClient(NinjaApiClient):
         super().__init__(settings.positions_host, settings.positions_port)
         cme = NinjaApiCommon_pb2.Exchange.CME
         self.products = {"NQU5": cme}
-        self.accounts = ["FW077", "FW078"]
+        self.accounts = ["FW077", "FW078", "FW079", "FW080"]
         # DYNAMIC
-        self.lastTime = datetime.now().replace(second=0, microsecond=80_000)
+        self.lastTime = datetime.now()
+        self.lastPrintTime = datetime.now().replace(second=0)
         self.positions = {}
         self.initial_flatten = True
+        self.positionCounter = 0
 
     """ 
     Gets positions of specified contract(s) for account(s)
@@ -35,10 +37,14 @@ class PositionsClient(NinjaApiClient):
         None, sends message for position request
     """
 
-    def get_positions(self, accounts, contractFilters, includeSpec=False):
+    def get_positions(self, accounts=None, contractFilters=None, includeSpec=False):
         getPositions = NinjaApiPositions_pb2.GetPositions()
-        getPositions.accounts.extend(accounts)
-        getPositions.filters.extend(contractFilters)
+        if accounts is not None:
+            getPositions.accounts.extend(accounts)
+        elif accounts is None:
+            getPositions.accounts.extend(self.accounts)
+        if contractFilters is not None:
+            getPositions.filters.extend(contractFilters)
         getPositions.includeSpec = includeSpec
 
         container = NinjaApiMessages_pb2.MsgContainer()
@@ -53,12 +59,7 @@ class PositionsClient(NinjaApiClient):
     """
 
     def get_all_positions(self):
-        for account in self.accounts:
-            for product in self.products.keys():
-                contract = NinjaApiContracts_pb2.Contract()
-                contract.exchange = self.products.get(product)
-                contract.secDesc = product
-                self.get_positions([account], [contract])
+        self.get_positions()
 
     def run(self):
         login = NinjaApiMessages_pb2.Login()
@@ -76,12 +77,12 @@ class PositionsClient(NinjaApiClient):
             msg = self.recv_msg()
             if not msg:
                 if (
-                    datetime.now() > self.lastTime + timedelta(seconds=60)
+                    datetime.now() > self.lastTime + timedelta(milliseconds=25)
                     and len(self.products) > 0
                     and len(self.accounts) > 0
                 ):
                     self.get_all_positions()
-                    self.lastTime = datetime.now().replace(second=0, microsecond=80_000)
+                    self.lastTime = datetime.now()
                 else:
                     continue
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.LOGIN_RESPONSE:
@@ -92,9 +93,11 @@ class PositionsClient(NinjaApiClient):
                 resp = NinjaApiPositions_pb2.Positions()
                 resp.ParseFromString(msg.payload)
                 for position in resp.positions:
-                    logging.info(
-                        f"{position.account}, {position.contract.exchange}, {position.contract.secDesc}: {position.totalPos}"
-                    )
+                    if self.lastPrintTime > self.lastTime + timedelta(seconds=60):
+                        logging.info(
+                            f"{position.account}, {position.contract.exchange}, {position.contract.secDesc}: {position.totalPos}"
+                        )
+                        self.lastPrintTime = self.lastTime.replace(second=0)
                     self.positions[
                         (
                             position.account,
@@ -102,35 +105,42 @@ class PositionsClient(NinjaApiClient):
                             position.contract.secDesc,
                         )
                     ] = position.totalPos
+                self.positionCounter += 1
                 # if flatten on boot, self.initial_flatten is True
                 if self.initial_flatten:
                     for position in resp.positions:
                         if position.totalPos < 0:
+                            ask = None
+                            while ask is None:
+                                ask = clients.tradingClient.get_ask(
+                                    position.contract.secDesc
+                                )
                             clients.tradingClient.order(
                                 account=position.account,
                                 product=position.contract.secDesc,
-                                price=clients.tradingClient.get_ask(
-                                    position.contract.secDesc
-                                ),
+                                price=ask,
                                 qty=-1 * position.totalPos,
                                 worker="w",
                                 exchange=position.contract.exchange,
                                 tag="FLATTEN_PROGRAMSTART",
-                                log=True,
                             )
+                            time.sleep(0.1)
                         elif position.totalPos > 0:
+                            bid = None
+                            while bid is None:
+                                bid = clients.tradingClient.get_bid(
+                                    position.contract.secDesc
+                                )
                             clients.tradingClient.order(
                                 account=position.account,
                                 product=position.contract.secDesc,
-                                price=clients.tradingClient.get_bid(
-                                    position.contract.secDesc
-                                ),
+                                price=bid,
                                 qty=-1 * position.totalPos,
                                 worker="w",
                                 exchange=position.contract.exchange,
                                 tag="FLATTEN_PROGRAMSTART",
-                                log=True,
                             )
+                            time.sleep(0.1)
                     self.initial_flatten = False
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.ERROR:
                 error = NinjaApiMessages_pb2.Error()

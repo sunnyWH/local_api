@@ -3,6 +3,7 @@ import socket
 import struct
 import threading
 import time
+import select
 
 from abc import ABC, abstractmethod
 from typing import Optional
@@ -53,6 +54,38 @@ class NinjaApiClient(ABC):
             except:
                 logging.exception("Failed sending message. Disconnecting client.")
                 self.disconnect()
+
+    # def send_msg(self, container: NinjaApiMessages_pb2.MsgContainer):
+    #     if not self.connected:
+    #         logging.error("Not connected. Cannot send messages.")
+    #         return
+
+    #     serialized_container = container.SerializeToString()
+    #     framing = struct.pack("i", len(serialized_container))
+    #     data = framing + serialized_container
+
+    #     with self.send_lock:
+    #         total_sent = 0
+
+    #         try:
+    #             while total_sent < len(data):
+    #                 try:
+    #                     sent = self.sock.send(data[total_sent:])
+    #                     if sent == 0:
+    #                         raise RuntimeError("Socket connection broken")
+    #                     total_sent += sent
+
+    #                 except BlockingIOError:
+    #                     # Wait until the socket is writable before trying again
+    #                     ready_to_write, _, _ = select.select(
+    #                         [], [self.sock], [], 30.0
+    #                     )  # 30s timeout
+    #                     if not ready_to_write:
+    #                         raise TimeoutError("Socket not writable within timeout")
+
+    #         except Exception:
+    #             logging.exception("Failed sending message. Disconnecting client.")
+    #             self.disconnect()
 
     def recv_msg(self) -> Optional[NinjaApiMessages_pb2.MsgContainer]:
         if not self.connected:

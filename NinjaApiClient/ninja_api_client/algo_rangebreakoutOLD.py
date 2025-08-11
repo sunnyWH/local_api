@@ -21,7 +21,7 @@ class RB(Algo):
         self.product = "NQU5"
         self.productDiv = 100
         self.volumeThreshold = 100_000
-        self.rangeThreshold = 100
+        self.rangeThreshold = 150
         self.volThreshold = 0.0025
         self.volMaxThreshold = 0.002
         self.tickMinThreshold = 4
@@ -30,7 +30,6 @@ class RB(Algo):
         self.buyStopThreshold = 200
         self.sellStartThreshold = 25
         self.sellStopThreshold = 100
-        self.ticksAway = 1_000
         self.marketStop = datetime.now(ZoneInfo("America/Chicago")).replace(
             hour=15, minute=59, second=0, microsecond=0
         )
@@ -56,7 +55,6 @@ class RB(Algo):
         self.buyStop = None
         self.sellStart = None
         self.sellStop = None
-        self.oldLevels = [None, None, None, None]
         self.currentTime = None
         self.lastVolCheck = None
         self.running = True
@@ -65,9 +63,6 @@ class RB(Algo):
         self.bid = None
         self.ask = None
         self.position = 0
-        self.activeOrders = {"BUY": None, "SELL": None}
-        self.activeOrderCounter = clients.tradingClient.activeOrderCounter
-        self.fillCounter = clients.tradingClient.fillCounter
 
     def warmup(self):
         engine = create_engine(
@@ -90,8 +85,6 @@ class RB(Algo):
         finally:
             engine.dispose()
         df.drop(columns=["wh_name"], inplace=True)
-        if len(df) < 500_000:
-            logging.error("RB: DATA REQUEST SEEMS OFF")
         df["sending_time"] = df["sending_time"].str.replace(
             r"(\.\d{6})\d+", r"\1", regex=True
         )
@@ -150,7 +143,7 @@ class RB(Algo):
             self.windowClose = None
         self.lastVolCheck = end_time
         logging.info(
-            f"RB, WARMUP DONE: {self.windowOpen}, {self.windowHigh}, {self.windowLow}, {self.vol:.5f}"
+            f"WARMUP DONE: {self.windowOpen}, {self.windowHigh}, {self.windowLow}, {self.vol:.5f}"
         )
 
     def run(self):
@@ -158,16 +151,11 @@ class RB(Algo):
         while self.running:
             # set vars
             self.currentTime = datetime.now(ZoneInfo("America/Chicago"))
-            self.bid = clients.tradingClient.get_bid(self.product)
-            self.ask = clients.tradingClient.get_ask(self.product)
-            self.latestTradePrice = clients.tradingClient.get_trade_price(self.product)
-
-            # do divisor adjustment for prices
-            if any(x is None for x in [self.bid, self.ask, self.latestTradePrice]):
-                continue
-            self.bid = self.bid / self.productDiv
-            self.ask = self.ask / self.productDiv
-            self.latestTradePrice = self.latestTradePrice / self.productDiv
+            self.bid = clients.tradingClient.get_bid(self.product) / self.productDiv
+            self.ask = clients.tradingClient.get_ask(self.product) / self.productDiv
+            self.latestTradePrice = (
+                clients.tradingClient.get_trade_price(self.product) / self.productDiv
+            )
             self.windowHigh = max(
                 self.windowHigh,
                 clients.tradingClient.get_high(self.product) / self.productDiv,
@@ -177,14 +165,12 @@ class RB(Algo):
                 clients.tradingClient.get_low(self.product) / self.productDiv,
             )
 
-            # check volume threshold
+            # check volume and range thresholds
             self.volume_add = clients.tradingClient.get_volume(self.product)
             self.volume = self.volume_init + self.volume_add
             if not self.volumeOK and self.volume >= self.volumeThreshold:
                 logging.info(f"VolumeOK: {self.volume}")
                 self.volumeOK = True
-
-            # check range threshold and update new highs and lows
             if (
                 clients.tradingClient.get_high(self.product) / self.productDiv
                 > self.rangeHigh
@@ -209,7 +195,6 @@ class RB(Algo):
                 )
                 self.rangeOK = True
 
-            # check Vol every interval
             if self.lastVolCheck + timedelta(seconds=self.volFreq) < self.currentTime:
                 self.windowClose = self.latestTradePrice
                 self.vol = self.garmanKlass()
@@ -224,30 +209,7 @@ class RB(Algo):
                     logging.info(f"NOT VolOK: {self.vol:.5f}, {self.volThreshold}")
                 self.lastVolCheck = self.currentTime.replace(second=0, microsecond=0)
 
-            # wait for active order update
-            if self.activeOrderCounter == clients.tradingClient.activeOrderCounter:
-                continue
-
-            self.activeOrderCounter = clients.tradingClient.activeOrderCounter
-            orders_snapshot = list(clients.tradingClient.activeOrders.values())
-            buyThere = False
-            sellThere = False
-            for order in orders_snapshot:
-                if order.account == self.account:
-                    if order.side == 1:
-                        self.activeOrders["BUY"] = order
-                        buyThere = True
-                    elif order.side == 2:
-                        self.activeOrders["SELL"] = order
-                        sellThere = True
-            if not buyThere:
-                self.activeOrders["BUY"] = None
-            if not sellThere:
-                self.activeOrders["SELL"] = None
-
-            # calculate new levels
             self.calcLevels()
-
             if self.currentTime > self.printTime + timedelta(seconds=60):
                 logging.info(
                     f"High: {self.rangeHigh}, Low: {self.rangeLow}, Volume: {self.volume}, Vol: {self.vol:.5f}\nLevels: [{self.sellStart}, {self.sellStop}, {self.buyStop}, {self.buyStart}]"
@@ -256,65 +218,36 @@ class RB(Algo):
 
             if self.volumeOK and self.rangeOK:
                 if self.volOK:
-                    putorderIn = False
-                    if self.position == 0 and self.activeOrders["BUY"] is None:
-                        print(f"BUYING:{self.activeOrders.values()}")
-                        self.order(
-                            qty=1,
-                            price=self.buyStart - self.ticksAway,
-                            worker="D",
-                        )
-                        putOrderIn = True
-                        logging.info(f"buyStart: {[self.buyStart, self.ticksAway]}")
-                    if self.position == 0 and self.activeOrders["SELL"] is None:
-                        print(f"SELLING:{self.activeOrders.values()}")
-                        self.order(
-                            qty=-1,
-                            price=self.sellStart + self.ticksAway,
-                            worker="D",
-                        )
-                        putOrderIn = True
-                        logging.info(f"sellStart: {[self.sellStart, self.ticksAway]}")
-                    if putOrderIn:  # add extra time to confirm order in exchange
-                        time.sleep(0.6)
-                # if (
-                #     self.activeOrders["BUY"] is not None
-                #     and self.activeOrders["SELL"] is not None
-                # ):
-                #     logging.info(
-                #         f"Orders: {self.activeOrders['BUY'].orderNo}, {self.activeOrders['SELL'].orderNo}"
-                #     )
+                    if self.position == 0:
+                        if (
+                            self.bid >= self.buyStart
+                            or self.latestTradePrice >= self.buyStart
+                        ):
+                            self.order(self.buyStart, 1, tag="START_BUY")
+                            self.position += 1
+                        elif (
+                            self.ask <= self.sellStart
+                            or self.latestTradePrice <= self.sellStart
+                        ):
+                            self.order(self.sellStart, -1, tag="START_SELL")
+                            self.position -= 1
 
-                #     if self.position == 0:
-                #         if (
-                #             self.bid >= self.buyStart
-                #             or self.latestTradePrice >= self.buyStart
-                #         ):
-                #             self.order(self.buyStart, 1, tag="START_BUY")
-                #             self.position += 1
-                #         elif (
-                #             self.ask <= self.sellStart
-                #             or self.latestTradePrice <= self.sellStart
-                #         ):
-                #             self.order(self.sellStart, -1, tag="START_SELL")
-                #             self.position -= 1
-
-                # if self.position > 0:
-                #     if (
-                #         self.ask <= self.buyStop
-                #         or self.latestTradePrice <= self.buyStop
-                #     ):
-                #         self.order(self.buyStop, -1, tag="STOP_BUY")
-                #         self.position -= 1
-                #         self.highReset = False
-                # if self.position < 0:
-                #     if (
-                #         self.bid >= self.sellStop
-                #         or self.latestTradePrice >= self.sellStop
-                #     ):
-                #         self.order(self.sellStop, 1, tag="STOP_SELL")
-                #         self.position += 1
-                #         self.lowReset = False
+                if self.position > 0:
+                    if (
+                        self.ask <= self.buyStop
+                        or self.latestTradePrice <= self.buyStop
+                    ):
+                        self.order(self.buyStop, -1, tag="STOP_BUY")
+                        self.position -= 1
+                        self.highReset = False
+                if self.position < 0:
+                    if (
+                        self.bid >= self.sellStop
+                        or self.latestTradePrice >= self.sellStop
+                    ):
+                        self.order(self.sellStop, 1, tag="STOP_SELL")
+                        self.position += 1
+                        self.lowReset = False
 
             if self.currentTime >= self.marketStop:
                 logging.info(f"RB: Outside of Market Hours, flattening...")
@@ -332,6 +265,7 @@ class RB(Algo):
         worker="w",
         exchange=1,
         tag="",
+        log=True,
     ):
         clients.tradingClient.order(
             account=self.account,
@@ -341,58 +275,27 @@ class RB(Algo):
             worker=worker,
             exchange=exchange,
             tag=tag,
+            log=log,
         )
 
-    def changeOrder(
-        self,
-        orderNo,
-        price,
-        qty,
-        worker="D",
-        account=None,
-        product=None,
-        exchange=1,
-    ):
-        if account is None:
-            account = self.account
-        if product is None:
-            product = self.product
-        clients.tradingClient.change_order(
-            orderNo=orderNo,
-            price=price * self.productDiv,
-            qty=qty,
-            worker=worker,
-            account=account,
-            product=product,
-            exchange=exchange,
-        )
-
-    def flatten(self, price, tag):
-        # if self.position != 0:
-        clients.tradingClient.flatten(
-            self.account,
-            self.product,
-            price * self.productDiv,
-            -self.position,
-            worker="w",
-            exchange=1,
-            tag=tag,
-        )
-        # else:
-        #     logging.info("Flatten attempted, position already 0")
+    def flatten(self, price, tag, log=True):
+        if self.position != 0:
+            clients.tradingClient.flatten(
+                self.account,
+                self.product,
+                price * self.productDiv,
+                -self.position,
+                worker="w",
+                exchange=1,
+                tag=tag,
+                log=log,
+            )
+        else:
+            logging.info("Flatten attempted, position already 0")
         self.position = 0
 
     # RECALCULATE LEVELS
     def calcLevels(self):
-        # if (
-        #     self.activeOrders["BUY"] is not None
-        #     and self.activeOrders["SELL"] is not None
-        # ):
-        #     logging.info(
-        #         f"Orders, calc: {self.activeOrders['BUY'].orderNo}, {self.activeOrders['SELL'].orderNo}"
-        #     )
-        # logging.info([self.activeOrders["BUY"], self.activeOrders["SELL"]])
-        self.oldLevels[3] = self.buyStart
         self.buyStart = self.tickRound(
             (
                 self.rangeHigh
@@ -407,17 +310,6 @@ class RB(Algo):
             ),
             4,
         )
-        if self.buyStart != self.oldLevels[3]:
-            if self.activeOrders["BUY"] != None and self.position == 0:
-                logging.info(self.activeOrders["BUY"])
-
-                self.changeOrder(
-                    orderNo=self.activeOrders["BUY"].orderNo,
-                    price=self.buyStart - self.ticksAway,
-                    qty=self.activeOrders["BUY"].qty,
-                )
-        # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        self.oldLevels[2] = self.buyStop
         self.buyStop = self.tickRound(
             (
                 self.rangeHigh
@@ -432,15 +324,6 @@ class RB(Algo):
             ),
             4,
         )
-        if self.buyStop != self.oldLevels[2]:
-            if self.activeOrders["SELL"] != None and self.position == 1:
-                self.changeOrder(
-                    orderNo=self.activeOrders["SELL"].orderNo,
-                    price=self.buyStop + self.ticksAway,
-                    qty=self.activeOrders["SELL"].qty,
-                )
-        # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        self.oldLevels[1] = self.sellStop
         self.sellStop = self.tickRound(
             (
                 self.rangeLow
@@ -455,15 +338,6 @@ class RB(Algo):
             ),
             4,
         )
-        if self.sellStop != self.oldLevels[1]:
-            if self.activeOrders["BUY"] != None and self.position == -1:
-                self.changeOrder(
-                    orderNo=self.activeOrders["BUY"].orderNo,
-                    price=self.sellStop - self.ticksAway,
-                    qty=self.activeOrders["BUY"].qty,
-                )
-        # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-        self.oldLevels[0] = self.sellStart
         self.sellStart = self.tickRound(
             (
                 self.rangeLow
@@ -478,13 +352,6 @@ class RB(Algo):
             ),
             4,
         )
-        if self.sellStart != self.oldLevels[0]:
-            if self.activeOrders["SELL"] != None and self.position == 0:
-                self.changeOrder(
-                    orderNo=self.activeOrders["SELL"].orderNo,
-                    price=self.sellStart + self.ticksAway,
-                    qty=self.activeOrders["SELL"].qty,
-                )
 
     def garmanKlass(self, log=True):
         if all(

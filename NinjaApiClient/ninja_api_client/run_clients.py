@@ -10,6 +10,7 @@ import flatten_and_close
 # import algos
 import algo_monkey
 import algo_rangebreakout
+import algo_microtrend
 from config import settings
 
 
@@ -44,6 +45,11 @@ def run_clients():
     thread = threading.Thread(target=clients.algoRB.run, daemon=True)
     thread.start()
     threads.append(thread)
+
+    # clients.algoMT = algo_rangebreakout.MT()
+    # thread = threading.Thread(target=clients.algoMT.run, daemon=True)
+    # thread.start()
+    # threads.append(thread)
 
     # ADD FLATTEN
     thread = threading.Thread(target=flatten_and_close.run, daemon=True)

@@ -224,12 +224,23 @@ class TradingClient(NinjaApiClient):
     def change_order(
         self, orderNo, price, qty, worker="w", account="", product="", exchange=1
     ):
-        # change order to new price and qty
+        # reset order to no worker with new qty and price
         container = NinjaApiMessages_pb2.MsgContainer()
         orderchange = NinjaApiOrderHandling_pb2.OrderChange()
         orderchange.orderNo = orderNo
         orderchange.qty = qty
         orderchange.price = price
+        orderchange.prefix = "G"
+        container.header.msgType = NinjaApiMessages_pb2.Header.ORDER_CHANGE_REQUEST
+        container.payload = orderchange.SerializeToString()
+        self.send_msg(container)
+        self.inOrderChange[orderNo] = True
+        logging.info(f"waiting start: {self.inOrderChange}")
+        # update worker after change confirmed
+        while self.inOrderChange[orderNo] == True:
+            time.sleep(0.01)
+        orderchange = NinjaApiOrderHandling_pb2.OrderChange()
+        orderchange.orderNo = orderNo
         orderchange.prefix = worker
         container.header.msgType = NinjaApiMessages_pb2.Header.ORDER_CHANGE_REQUEST
         container.payload = orderchange.SerializeToString()
@@ -560,6 +571,9 @@ class TradingClient(NinjaApiClient):
                     f"with order number ({resp.orderNo}). "
                     f"Price: {resp.price}, Side: {NinjaApiCommon_pb2.Side.Name(resp.side)}, Qty: {resp.qty}"
                 )
+                logging.info(f"waiting:{resp.orderNo}")
+                if self.inOrderChange[resp.orderNo] is True:
+                    self.inOrderChange[resp.orderNo] = False
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.ORDER_CHANGE_FAILURE:
                 resp = NinjaApiOrderHandling_pb2.OrderChangeFailure()
                 resp.ParseFromString(msg.payload)
@@ -569,6 +583,8 @@ class TradingClient(NinjaApiClient):
                     f"Error code: {NinjaApiMessages_pb2.Error.Type.Name(resp.errorCode)}."
                     f'Reason: ("{resp.reason}").'
                 )
+                if self.inOrderChange[resp.orderNo] is True:
+                    self.inOrderChange[resp.orderNo] = False
             elif msg.header.msgType == NinjaApiMessages_pb2.Header.MASS_CANCEL_EVENT:
                 resp = NinjaApiOrderHandling_pb2.MassCancelEvent()
                 resp.ParseFromString(msg.payload)

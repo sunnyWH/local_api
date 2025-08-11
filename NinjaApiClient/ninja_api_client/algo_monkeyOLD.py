@@ -33,7 +33,6 @@ class Monkey(Algo):
         self.marketEnd = datetimeTime(14, 59)
         self.toPrint = True
         self.running = True
-        self.ticksAway = 1_000
 
         # DYNAMIC PARAMETERS
         self.signal = 0
@@ -55,9 +54,7 @@ class Monkey(Algo):
         self.entryPrices = []
         self.initialTradeTime = None
         self.gain = None
-        self.gainOrder = None
         self.loss = None
-        self.lossOrder = None
         self.pnlCheckCounter = 0
 
     def warmup(self):
@@ -115,23 +112,13 @@ class Monkey(Algo):
     def run(self):
         self.warmup()
         while self.running:
-            # GET BID, ASK, TRADE PRICE, GAIN AND LOSS ORDERS
+            # GET THE CORRECT TIMES
             self.currentTime = datetime.now()
             self.bid = clients.tradingClient.get_bid(self.product) / self.productDiv
             self.ask = clients.tradingClient.get_ask(self.product) / self.productDiv
             self.latestTradePrice = (
                 clients.tradingClient.get_trade_price(self.product) / self.productDiv
             )
-            orders_snapshot = list(clients.tradingClient.activeOrders.values())
-            buyThere = False
-            sellThere = False
-            for order in orders_snapshot:
-                if order.account == self.account:
-                    if order.prefix == "G":
-                        self.gainOrder = order
-                    elif order.prefix == "D":
-                        self.lossOrder = order
-
             if not self.inMarket:
                 if (
                     self.lastTime is None
@@ -232,12 +219,8 @@ class Monkey(Algo):
                                 self.gain = self.tickRound(
                                     self.latestTradePrice * (1 - self.gainLimit)
                                 )
-                                self.order(price=self.gain, qty=1, worker="G")
                                 self.loss = self.tickRound(
                                     self.latestTradePrice * (1 + self.lossLimit)
-                                )
-                                self.order(
-                                    price=self.loss - self.ticksAway, qty=1, worker="D"
                                 )
                             elif self.signal == 1 and self.signalFlip != self.signal:
                                 self.order(self.ask, 1, tag="START_BUY")
@@ -250,12 +233,8 @@ class Monkey(Algo):
                                 self.gain = self.tickRound(
                                     self.latestTradePrice * (1 + self.gainLimit)
                                 )
-                                self.order(price=self.gain, qty=-1, worker="G")
                                 self.loss = self.tickRound(
                                     self.latestTradePrice * (1 - self.lossLimit)
-                                )
-                                self.order(
-                                    price=self.loss + self.ticksAway, qty=-1, worker="D"
                                 )
 
                         # position is positive, do our adding checks
@@ -277,7 +256,6 @@ class Monkey(Algo):
                                     elif self.position < 5:
                                         last_pos = self.position
                                         self.position += 1
-                                        self.adjustGainLoss(-5)
                                         self.order(
                                             self.ask,
                                             self.position - last_pos,
@@ -301,7 +279,6 @@ class Monkey(Algo):
                                     elif self.position < 4:
                                         last_pos = self.position
                                         self.position += 1
-                                        self.adjustGainLoss(-4)
                                         self.order(
                                             self.ask,
                                             self.position - last_pos,
@@ -325,7 +302,6 @@ class Monkey(Algo):
                                     elif self.position < 3:
                                         last_pos = self.position
                                         self.position += 1
-                                        self.adjustGainLoss(-3)
                                         self.order(
                                             self.ask,
                                             self.position - last_pos,
@@ -348,7 +324,6 @@ class Monkey(Algo):
                                     elif self.position < 2:
                                         last_pos = self.position
                                         self.position += 1
-                                        self.adjustGainLoss(-2)
                                         self.order(
                                             self.ask,
                                             self.position - last_pos,
@@ -375,7 +350,6 @@ class Monkey(Algo):
                                     elif self.position > -5:
                                         last_pos = self.position
                                         self.position -= 1
-                                        self.adjustGainLoss(5)
                                         self.order(
                                             self.bid,
                                             self.position - last_pos,
@@ -399,7 +373,6 @@ class Monkey(Algo):
                                     elif self.position > -4:
                                         last_pos = self.position
                                         self.position -= 1
-                                        self.adjustGainLoss(4)
                                         self.order(
                                             self.bid,
                                             self.position - last_pos,
@@ -423,7 +396,6 @@ class Monkey(Algo):
                                     elif self.position > -3:
                                         last_pos = self.position
                                         self.position -= 1
-                                        self.adjustGainLoss(3)
                                         self.order(
                                             self.bid,
                                             self.position - last_pos,
@@ -446,7 +418,6 @@ class Monkey(Algo):
                                     elif self.position > -2:
                                         last_pos = self.position
                                         self.position -= 1
-                                        self.adjustGainLoss(2)
                                         self.order(
                                             self.bid,
                                             self.position - last_pos,
@@ -468,15 +439,9 @@ class Monkey(Algo):
         price,
         qty,
         worker="w",
-        account=None,
-        product=None,
         exchange=1,
         tag="",
     ):
-        if account is None:
-            account = self.account
-        if product is None:
-            product = self.product
         clients.tradingClient.order(
             account=self.account,
             product=self.product,
@@ -486,54 +451,6 @@ class Monkey(Algo):
             exchange=exchange,
             tag=tag,
         )
-
-    def changeOrder(
-        self,
-        orderNo,
-        price,
-        qty,
-        worker="D",
-        account=None,
-        product=None,
-        exchange=1,
-    ):
-        if account is None:
-            account = self.account
-        if product is None:
-            product = self.product
-        clients.tradingClient.change_order(
-            orderNo=orderNo,
-            price=price * self.productDiv,
-            qty=qty,
-            worker=worker,
-            account=account,
-            product=product,
-            exchange=exchange,
-        )
-
-    def adjustGainLoss(self, qty):
-        if self.gainOrder is not None and self.lossOrder is not None:
-            self.changeOrder(
-                self.gainOrder.orderNo, self.gainOrder.price, qty, self.gainOrder.prefix
-            )
-            self.changeOrder(
-                self.lossOrder.orderNo, self.lossOrder.price, qty, self.lossOrder.prefix
-            )
-        else:
-            logging.info(
-                f"Gain or Loss order not found. Gain: {self.gainOrder}, Loss: {self.LossOrder}"
-            )
-
-    def cancelGainLoss(self):
-        if self.gainOrder is not None and self.lossOrder is not None:
-            clients.tradingClient.cancel_order(self.gainOrder.orderNo)
-            clients.tradingClient.cancel_order(self.lossOrder.orderNo)
-            self.gainOrder = None
-            self.lossOrder = None
-        else:
-            logging.info(
-                f"Gain or Loss order not found. Gain: {self.gainOrder}, Loss: {self.LossOrder}"
-            )
 
     def flatten(self, price, tag):
         if self.position != 0:
@@ -549,11 +466,8 @@ class Monkey(Algo):
         else:
             logging.info("Flatten attempted, position already 0")
         self.initialTradeTime = None
-        self.cancelGainLoss()
         self.gain = None
-        self.gainOrder = None
         self.loss = None
-        self.lossOrder = None
         self.entryPrices = []
         self.pnlCheckCounter = 0
         self.position = 0
@@ -623,3 +537,5 @@ class Monkey(Algo):
 
     def disconnect(self):
         self.running = False
+
+    # if __name__ == "__main__":
