@@ -532,7 +532,7 @@ class Monkey(Algo):
             self.lossOrder = None
         else:
             logging.info(
-                f"Gain or Loss order not found. Gain: {self.gainOrder}, Loss: {self.LossOrder}"
+                f"Gain or Loss order not found. Gain: {self.gainOrder}, Loss: {self.lossOrder}"
             )
 
     def flatten(self, price, tag):
