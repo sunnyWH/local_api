@@ -27,7 +27,7 @@ def run():
             )
             for orderNo in clients.tradingClient.activeOrders.keys():
                 clients.tradingClient.cancel_order(orderNo)
-            positions = clients.positionClient.positions
+            positions = clients.positionsClient.positions
             for entry in positions.keys():
                 account = entry[0]
                 exchange = entry[1]
@@ -56,12 +56,12 @@ def run():
             while len(clients.tradingClient.activeOrders.values()) > 0:
                 time.sleep(0.1)
 
-            while sum(clients.positionClient.positions.values()) != 0:
+            while sum(clients.positionsClient.positions.values()) != 0:
                 time.sleep(0.1)
 
-            if clients.positionClient is not None:
+            if clients.positionsClient is not None:
                 logging.info("POSITIONS_CLIENT: Disconnecting...")
-                clients.positionClient.disconnect()
+                clients.positionsClient.disconnect()
             else:
                 logging.warning("POSITIONS_CLIENT not set!")
 

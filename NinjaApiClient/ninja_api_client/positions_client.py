@@ -93,11 +93,6 @@ class PositionsClient(NinjaApiClient):
                 resp = NinjaApiPositions_pb2.Positions()
                 resp.ParseFromString(msg.payload)
                 for position in resp.positions:
-                    if self.lastPrintTime > self.lastTime + timedelta(seconds=60):
-                        logging.info(
-                            f"{position.account}, {position.contract.exchange}, {position.contract.secDesc}: {position.totalPos}"
-                        )
-                        self.lastPrintTime = self.lastTime.replace(second=0)
                     self.positions[
                         (
                             position.account,
@@ -105,6 +100,19 @@ class PositionsClient(NinjaApiClient):
                             position.contract.secDesc,
                         )
                     ] = position.totalPos
+                if datetime.now() > self.lastPrintTime + timedelta(seconds=60):
+                    whitespace = " " * 32
+                    logging.info(
+                        f"\n{whitespace}".join(
+                            f"Account: {acct}, Product: {secDesc} => TotalPos: {totalPos}"
+                            for (
+                                acct,
+                                exchange,
+                                secDesc,
+                            ), totalPos in self.positions.items()
+                        )
+                    )
+                    self.lastPrintTime = datetime.now().replace(second=0)
                 self.positionCounter += 1
                 # if flatten on boot, self.initial_flatten is True
                 if self.initial_flatten:

@@ -24,8 +24,8 @@ def run_clients():
     # ADD CLIENTS
     if settings.positions_access_token:
         logging.info(f"Positions Client Added")
-        clients.positionClient = PositionsClient()
-        programs.append(clients.positionClient)
+        clients.positionsClient = PositionsClient()
+        programs.append(clients.positionsClient)
     if settings.trading_access_token:
         logging.info(f"Trading Client Added")
         clients.tradingClient = TradingClient()

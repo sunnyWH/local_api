@@ -24,6 +24,7 @@ class TradingClient(NinjaApiClient):
         self.logger = TradingLogger()
         cme = NinjaApiCommon_pb2.Exchange.CME
         self.lastOrderCheck = datetime.now()
+        self.lastPrintTime = datetime.now().replace(second=0)
         self.products = {"NQU5": cme}
         self.accounts = ["FW077", "FW078", "FW079", "FW080"]
         self.latest_trade_price = {product: None for product in self.products.keys()}
@@ -212,19 +213,31 @@ class TradingClient(NinjaApiClient):
     Returns:
         None
     """
-
+    # # CANCELS OLD ORDER AND SENDS NEW ORDER IN
     # def change_order(
     #     self, orderNo, price, qty, worker="w", account="", product="", exchange=1
     # ):
+    #     # change order to new price and qty
+    #     if qty < 0:
+    #         logging.info(
+    #             "Negative qtys are transitioned to positive as side captures direction."
+    #         )
+    #         qty = abs(qty)
     #     # cancel existing order
     #     self.cancel_order(orderNo)
     #     # put in new order
     #     self.order(account, product, price, qty, worker, exchange)
 
+    # JUST CHANGES THE ORDER
     def change_order(
         self, orderNo, price, qty, worker="w", account="", product="", exchange=1
     ):
         # change order to new price and qty
+        if qty < 0:
+            logging.info(
+                "Negative qtys are transitioned to positive as side captures direction."
+            )
+            qty = abs(qty)
         container = NinjaApiMessages_pb2.MsgContainer()
         orderchange = NinjaApiOrderHandling_pb2.OrderChange()
         orderchange.orderNo = orderNo
@@ -234,6 +247,34 @@ class TradingClient(NinjaApiClient):
         container.header.msgType = NinjaApiMessages_pb2.Header.ORDER_CHANGE_REQUEST
         container.payload = orderchange.SerializeToString()
         self.send_msg(container)
+
+    # # CHANGES ORDER TO G WORKER THEN ASSIGNS WORKER TO IT
+    # def change_order(
+    #     self, orderNo, price, qty, worker="w", account="", product="", exchange=1
+    # ):
+    #     # change order to new price and qty
+    #     if qty < 0:
+    #         logging.info(
+    #             "Negative qtys are transitioned to positive as side captures direction."
+    #         )
+    #         qty = abs(qty)
+    #     container = NinjaApiMessages_pb2.MsgContainer()
+    #     orderchange = NinjaApiOrderHandling_pb2.OrderChange()
+    #     orderchange.orderNo = orderNo
+    #     orderchange.qty = qty
+    #     orderchange.price = price
+    #     orderchange.prefix = "G"
+    #     container.header.msgType = NinjaApiMessages_pb2.Header.ORDER_CHANGE_REQUEST
+    #     container.payload = orderchange.SerializeToString()
+    #     self.send_msg(container)
+    #     while self.activeOrders.get(orderNo).prefix != "G":
+    #         time.sleep(0.01)
+    #     container = NinjaApiMessages_pb2.MsgContainer()
+    #     orderchange = NinjaApiOrderHandling_pb2.OrderChange()
+    #     orderchange.orderNo = orderNo
+    #     orderchange.prefix = worker
+    #     container.header.msgType = NinjaApiMessages_pb2.Header.ORDER_CHANGE_REQUEST
+    #     container.payload = orderchange.SerializeToString()
 
     """
     Cancel order according to orderNo
@@ -327,6 +368,17 @@ class TradingClient(NinjaApiClient):
         container.payload = startmd.SerializeToString()
         self.send_msg(container)
         while self.connected:
+            if datetime.now() > self.lastPrintTime + timedelta(seconds=60):
+                if len(self.activeOrders) > 0:
+                    logging.info(
+                        "| ".join(
+                            f"{order.orderNo}: {order.account}, {order.price}, {order.qty*((-2*order.side)+3)}"
+                            for order in self.activeOrders.values()
+                        )
+                    )
+                else:
+                    logging.info("No Active Orders")
+                self.lastPrintTime = datetime.now().replace(second=0)
             if datetime.now() > self.lastOrderCheck + timedelta(microseconds=50_000):
                 self.check_orders()
                 self.lastOrderCheck = datetime.now()

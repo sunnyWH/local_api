@@ -162,6 +162,15 @@ class RB(Algo):
             self.ask = clients.tradingClient.get_ask(self.product)
             self.latestTradePrice = clients.tradingClient.get_trade_price(self.product)
 
+            # get position
+            if (
+                clients.positionsClient.positions.get((self.account, 1, self.product))
+                is not None
+            ):
+                self.position = clients.positionsClient.positions.get(
+                    (self.account, 1, self.product)
+                )
+
             # do divisor adjustment for prices
             if any(x is None for x in [self.bid, self.ask, self.latestTradePrice]):
                 continue
@@ -249,8 +258,9 @@ class RB(Algo):
             self.calcLevels()
 
             if self.currentTime > self.printTime + timedelta(seconds=60):
+                whitespace = " " * 32
                 logging.info(
-                    f"High: {self.rangeHigh}, Low: {self.rangeLow}, Volume: {self.volume}, Vol: {self.vol:.5f}\nLevels: [{self.sellStart}, {self.sellStop}, {self.buyStop}, {self.buyStart}]"
+                    f"High: {self.rangeHigh}, Low: {self.rangeLow}, Volume: {self.volume}, Vol: {self.vol:.5f}\n{whitespace}Levels: [{self.sellStart}, {self.sellStop}, {self.buyStop}, {self.buyStart}]"
                 )
                 self.printTime = self.printTime + timedelta(seconds=60)
 
@@ -258,7 +268,7 @@ class RB(Algo):
                 if self.volOK:
                     putorderIn = False
                     if self.position == 0 and self.activeOrders["BUY"] is None:
-                        print(f"BUYING:{self.activeOrders.values()}")
+                        # print(f"BUYING: {self.activeOrders.values()}")
                         self.order(
                             qty=1,
                             price=self.buyStart - self.ticksAway,
@@ -267,7 +277,7 @@ class RB(Algo):
                         putOrderIn = True
                         logging.info(f"buyStart: {[self.buyStart, self.ticksAway]}")
                     if self.position == 0 and self.activeOrders["SELL"] is None:
-                        print(f"SELLING:{self.activeOrders.values()}")
+                        # print(f"SELLING: {self.activeOrders.values()}")
                         self.order(
                             qty=-1,
                             price=self.sellStart + self.ticksAway,
